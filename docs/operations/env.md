@@ -71,3 +71,39 @@ DATABASE_URL=postgres://micow:micow@127.0.0.1:5432/micow pnpm test
 
 Di CI, Postgres 16 disediakan sebagai service container sehingga test ini benar-benar
 jalan (lihat `.github/workflows/ci.yml`).
+
+## Webhook Helius → `activities`
+
+Feed aktivitas diisi lewat `POST /api/webhooks/helius`. Endpoint ini:
+
+- **Wajib** punya `HELIUS_WEBHOOK_SECRET`. Bila kosong → `503` (fail-closed);
+  secret salah/kosong → `401`. Perbandingan pakai constant-time.
+- Menerima array enhanced transaction (Helius), memetakan ke `Activity` dengan id
+  deterministik `{signature}:{mint}:{type}` → **replay/duplikat aman** (dedup di DB).
+- `200` saat sukses (termasuk delivery kosong), `500` saat gagal tulis supaya
+  Helius mengirim ulang, `503` bila read model tak tersedia.
+
+Setup:
+
+```bash
+# 1. Set secret di .env (server-only — jangan di NEXT_PUBLIC_*).
+echo 'HELIUS_WEBHOOK_SECRET=<random-panjang>' >> .env
+
+# 2. Registrasikan webhook di dashboard Helius:
+#    URL    : https://<domain>/api/webhooks/helius?auth=<secret>
+#    Type   : Enhanced / raw (NFT events)
+#    Account: alamat program/koleksi yang ingin dipantau
+```
+
+Verifikasi cepat (dev):
+
+```bash
+SECRET=<secret>
+# tanpa auth → 401
+curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:3000/api/webhooks/helius -d '[]'
+# payload kosong dengan auth → 200 {ok:true,accepted:0}
+curl -s -X POST "localhost:3000/api/webhooks/helius?auth=$SECRET" -d '[]'
+```
+
+Setelah event masuk, cek `/api/activities` dan halaman `/activity`.
+

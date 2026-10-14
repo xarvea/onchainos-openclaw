@@ -67,8 +67,13 @@ pnpm --filter @micow/web dev   # http://localhost:3000
 ```
 
 Halaman web: `/` (beranda), `/explore` (koleksi), `/collection/[address]`,
-`/portfolio` (NFT milik wallet). Data dibaca dari read model Postgres; bila
-`DATABASE_URL` belum diset, halaman tetap render dengan empty-state (tidak crash).
+`/activity` (feed on-chain), `/portfolio` (NFT milik wallet). Data dibaca dari read
+model Postgres; bila `DATABASE_URL` belum diset, halaman tetap render dengan
+empty-state (tidak crash).
+
+API: `/api/collections`, `/api/assets`, `/api/activities` (read model) dan
+`/api/webhooks/helius` (ingest event on-chain → `activities`, auth shared-secret).
+SEO: `/robots.txt`, `/sitemap.xml`, + OG image dinamis (`next/og`, 1200×630).
 
 ## Batasan etis
 Proyek ini **tidak** melakukan reverse engineering, scraping, atau penyalinan

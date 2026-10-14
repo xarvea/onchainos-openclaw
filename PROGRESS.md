@@ -8,7 +8,7 @@
 |-------|--------|---------|
 | 0 — Discovery | ✅ selesai | visi, chain, model bisnis ada di BLUEPRINT §1 |
 | 1 — Spec | 🟡 in progress | BLUEPRINT + riset + ADR ada; PRD/SRS/threat model detail menyusul |
-| 2 — Foundation | 🟡 in progress | monorepo ter-scaffold; CI & migrate belum |
+| 2 — Foundation | 🟡 in progress | monorepo, CI, migrate, web read model, webhook+SEO selesai; escrow/mint belum |
 | 3–7 | ⬜ belum | — |
 
 ## Task log
@@ -56,6 +56,26 @@
 - [x] CI: service container Postgres 16 + langkah `pnpm db:migrate` sebelum test
 - [x] Dokumentasi: `docs/operations/env.md` diberi langkah setup DB dari nol
 
+### 2026-10-14 — Phase 2/M3: webhook Helius → activities + SEO/OG
+- [x] Port `ActivityRepository` (append-only, idempotent) + `DrizzleActivityRepository`
+  + `InMemoryActivityRepository` + wiring `container`
+- [x] Mapper murni `packages/solana/src/helius-webhook.ts`: `HeliusEnhancedTransaction`
+  → `Activity[]`; id deterministik `{signature}:{mint}:{type}` (replay = no-op),
+  harga dari `events.nft.amount` lalu fallback `nativeTransfers`, **tidak mengarang
+  history** untuk tipe/kunci tidak valid
+- [x] `POST /api/webhooks/helius`: auth shared-secret **constant-time**, fail-closed
+  (503 tanpa secret, 401 salah), retry-safe (200 ok, 500 saat gagal tulis)
+- [x] Feed: `ActivityFeed` + halaman `/activity` + `/api/activities`
+  (serialisasi bigint→string agar aman untuk nilai > 2^53)
+- [x] SEO: `robots.ts`, `sitemap.ts` (statis + koleksi dari read model, degrade aman)
+- [x] OG dinamis via `next/og`: root + per-koleksi (1200×630)
+- [x] Metadata lengkap: canonical, robots, openGraph, twitter; portfolio `noindex`
+- [x] `NEXT_PUBLIC_SITE_URL` di client env schema
+- [x] Test: 13 tes mapper + integrasi DB (idempotency, bigint price, urutan blockTime)
+- [x] Verifikasi end-to-end: dev server + Postgres nyata — webhook (401/ok/recorded),
+  DB dedup 1 baris meski payload dikirim 2×, `/api/activities` & `/activity` render
+  (badge SALE, 1.5 SOL), OG image PNG 1200×630, robots/sitemap valid
+
 ### 2026-10-14 — Phase 2: web read model (M1 selesai)
 - [x] `lib/read-model.ts` — akses read model server-side dengan **safe-degrade**:
   tanpa `DATABASE_URL` halaman render empty-state, bukan crash
@@ -95,8 +115,8 @@
 ## Berikutnya (menuju M3)
 1. Mint koleksi end-to-end via Candy Machine v3 (devnet).
 2. Escrow program (Auction House) + listing/buy (D1 di BLUEPRINT §12).
-3. Helius webhooks → `activities` (feed aktivitas realtime).
-4. OG image dinamis + sitemap (SEO).
+3. ✅ Helius webhooks → `activities` (feed aktivitas realtime) + UI `/activity`.
+4. ✅ OG image dinamis + sitemap + robots (SEO).
 
 ## Verifikasi (2026-10-14)
 
@@ -104,9 +124,10 @@
 |----------|-------|-------|
 | `pnpm lint` | ✅ 10/10 tasks (0 warning) | turbo tasks successful |
 | `pnpm typecheck` | ✅ 10/10 tasks | tsc --noEmit per paket |
-| `pnpm test` | ✅ 6/6 tasks (19 tes + 3 DB-integration bila `DATABASE_URL` ada) | vitest |
-| `pnpm build` | ✅ 2/2 tasks | Next.js compiled, 8 route di-generate |
-| Runtime | ✅ | `/api/health` → `{ok:true,...}`; `/` → HTTP 200; `/collection/[addr]` → HTTP 200 |
+| `pnpm test` | ✅ 6/6 tasks (32 tes unit + 4 DB-integration bila `DATABASE_URL` ada) | vitest |
+| `pnpm build` | ✅ 2/2 tasks | Next.js compiled, **14 route** di-generate |
+| Runtime | ✅ | `/api/health` → `{ok:true}`; `/`,`/explore`,`/activity`,`/portfolio` → 200; `/robots.txt`,`/sitemap.xml` valid; OG `image/png` 1200×630 |
+| Webhook | ✅ | `POST /api/webhooks/helius`: 401 tanpa secret, `accepted:0` payload kosong, `recorded:true` sale; DB dedup 1 baris saat replay |
 
 Lingkungan: Node 22.23.1 (nvm) · pnpm 10.26.1 · Next.js 15.5.27 · Turbo 2.11.
 
