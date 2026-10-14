@@ -31,6 +31,9 @@
   Inngest); test lama hanya mereplikasi logika → false coverage, sudah dibuang
 - [x] Test baru: `packages/solana/src/das.test.ts` (6 tes mapping DAS)
 - [x] Lint: `container.ts` pakai `import type * as schema` → 0 warning
+- [x] CI: `.github/workflows/ci.yml` (lint · typecheck · test · build + secret scan)
+- [x] `.github/dependabot.yml` (paket npm/pnpm + GitHub Actions, mingguan)
+- [x] Dokumen konsisten: sisa referensi "Vercel" → Cloudflare Pages
 
 ### 2026-10-14 — Phase 2: monorepo scaffold
 - [x] Root: `pnpm-workspace.yaml`, `package.json`, `turbo.json`, `.npmrc`, `.prettierrc`, `.nvmrc`, `.gitignore`
@@ -53,7 +56,7 @@
 2. Setup Postgres DB lokal + `pnpm db:generate` → review migration.
 3. Wire `HeliusDasIndexer` ke `AssetRepository` (Drizzle) + worker upsert.
 4. Wallet connect end-to-end di devnet + halaman explore.
-5. GitHub Actions CI (lint, typecheck, test, secret scan).
+5. ✅ GitHub Actions CI (lint, typecheck, test, build, secret scan) + Dependabot.
 
 ## Verifikasi (2026-10-14)
 
@@ -62,7 +65,7 @@
 | `pnpm lint` | ✅ 10/10 tasks (0 warning) | turbo tasks successful |
 | `pnpm typecheck` | ✅ 10/10 tasks | tsc --noEmit per paket |
 | `pnpm test` | ✅ 6/6 tasks (15 tes: domain 4, database 3, solana 6, worker 2) | vitest |
-| `pnpm build` | ✅ 2/2 tasks | Next.js compiled, 5 route di-generate |
+| `pnpm build` | ✅ 2/2 tasks | Next.js compiled, 4 route di-generate |
 | Runtime | ✅ | `/api/health` → `{ok:true,...}`; `/` → HTTP 200; `/collection/[addr]` → HTTP 200 |
 
 Lingkungan: Node 22.23.1 (nvm) · pnpm 10.26.1 · Next.js 15.5.27 · Turbo 2.11.

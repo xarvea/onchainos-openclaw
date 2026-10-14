@@ -122,8 +122,8 @@ failover ke QuickNode/Triton untuk produksi.
 | Indexer | Helius DAS + Webhooks + cache Postgres | ship hari, bukan bulan |
 | DB | Supabase Postgres | managed, RLS |
 | ORM | Drizzle | ringan, edge-friendly |
-| Queue | Inngest/Trigger.dev (Vercel) → BullMQ (self-host) | Vercel tak punya worker |
-| Deploy | Vercel (web) + Railway/Fly.io (worker) | hybrid |
+| Queue | Inngest/Trigger.dev (serverless) → BullMQ (self-host) | edge runtime tak punya worker |
+| Deploy | Cloudflare Pages + Workers (web) + Railway/Fly.io (worker) | hybrid, CF DNS sudah dimiliki |
 | Monorepo | pnpm workspaces + Turborepo | reuse antar app/paket |
 
 **Alasan pilih Next.js:** marketplace publik wajib SEO (halaman koleksi/NFT harus

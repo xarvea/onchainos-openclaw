@@ -1,0 +1,25 @@
+version: 2
+updates:
+  # Keep npm/pnpm dependencies patched.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # Batch minor/patch bumps to reduce PR noise.
+      minor-and-patch:
+        update-types: ['minor', 'patch']
+    labels:
+      - dependencies
+
+  # Keep GitHub Actions themselves up to date.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - ci

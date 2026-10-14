@@ -58,7 +58,7 @@ Bukan "clone" — melainkan produk dengan scope sempit yang dikerjakan dengan be
 
 ```
 ┌──────────────┐     ┌──────────────────────────────────────┐
-│  Browser     │     │  Edge / Vercel                        │
+│  Browser     │     │  Edge / Cloudflare Pages + Workers    │
 │  (wallet)    │────▶│  Next.js 15 App Router (RSC + ISR)    │
 └──────────────┘     │  - Halaman koleksi/NFT (SSR/ISR)      │
         │            │  - OG image dinamis                   │
@@ -116,7 +116,7 @@ Bukan "clone" — melainkan produk dengan scope sempit yang dikerjakan dengan be
 | Indexer | **Helius DAS + Webhooks** (MVP) → abstraksi `IndexerProvider` | Ship hari vs bulan; bisa swap ke Geyser nanti |
 | Database | **Supabase Postgres** | Managed, RLS, murah |
 | ORM | **Drizzle ORM + drizzle-kit** | Ringan, edge-friendly, SQL-first |
-| Cache/queue | **Upstash Redis** + **Inngest** (MVP) → **BullMQ** saat self-host | Vercel tak punya long-running worker |
+| Cache/queue | **Upstash Redis** + **Inngest** (MVP) → **BullMQ** saat self-host | Edge runtime tak punya long-running worker |
 | Storage aset | **Cloudflare R2 / Supabase Storage** (cache gambar) | Hemat bandwidth |
 
 ### Infra & Delivery
@@ -126,7 +126,7 @@ Bukan "clone" — melainkan produk dengan scope sempit yang dikerjakan dengan be
 | CI/CD | GitHub Actions (lint, typecheck, test, secret scan) |
 | Deploy web | **Cloudflare Pages** (user punya CF DNS) — BUKAN Vercel |
 | Deploy worker | Railway / Fly.io (Docker) / self-host |
-| Monitoring | Sentry + Vercel Analytics + Helius dashboard |
+| Monitoring | Sentry + Cloudflare Analytics + Helius dashboard |
 | Wallet (opsional) | Privy / Dynamic untuk embedded wallet (onboarding non-crypto) |
 
 ---

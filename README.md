@@ -1,5 +1,7 @@
 # MICOW
 
+[![CI](https://github.com/cryptobloxq/micow/actions/workflows/ci.yml/badge.svg)](https://github.com/cryptobloxq/micow/actions/workflows/ci.yml)
+
 Marketplace NFT Solana — dibangun dari nol di atas standar terbuka Metaplex
 dan API publik Solana.
 

@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Deterministic pnpm store location for caching.
+  PNPM_STORE: ${{ github.workspace }}/.pnpm-store
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Quality gate: lint, typecheck, test, build (mirrors BLUEPRINT §4 CI/CD).
+  # ---------------------------------------------------------------------------
+  quality:
+    name: Lint · Typecheck · Test · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.1
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  # ---------------------------------------------------------------------------
+  # Secret scan: fail if a real .env or keypair sneaks into the repo.
+  # (Defence-in-depth alongside .gitignore.)
+  # ---------------------------------------------------------------------------
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard against committed secrets
+        run: |
+          set -euo pipefail
+          fail=0
+
+          # 1. No real .env file should ever be tracked (.env.example is OK).
+          if git ls-files | grep -E '(^|/)\.env($|\.local$|\.production$|\.development$)'; then
+            echo "::error::A real .env file is tracked in git."
+            fail=1
+          fi
+
+          # 2. No keypair JSON (Solana keypairs are secrets).
+          if git ls-files | grep -E 'keypair.*\.json$'; then
+            echo "::error::A keypair JSON file is tracked in git."
+            fail=1
+          fi
+
+          # 3. Heuristic scan for hard-coded secrets in source (case-insensitive,
+          #    so HELIUS_API_KEY / heliusApiKey / private_key are all covered).
+          #    Real keys live in CI secrets, never in source.
+          if git grep -niEI '(helius[_-]?api[_-]?key|private[_-]?key|secret[_-]?key)[[:space:]]*[:=][[:space:]]*["'\'']?[A-Za-z0-9_/+-]{20,}' -- ':!*.example' ':!*.md' ':!pnpm-lock.yaml' ':!docs' ':!.github'; then
+            echo "::error::Possible hard-coded secret found in source."
+            fail=1
+          fi
+
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
+          echo "No committed secrets detected."
