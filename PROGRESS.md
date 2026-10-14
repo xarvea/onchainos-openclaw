@@ -56,6 +56,19 @@
 - [x] CI: service container Postgres 16 + langkah `pnpm db:migrate` sebelum test
 - [x] Dokumentasi: `docs/operations/env.md` diberi langkah setup DB dari nol
 
+### 2026-10-14 — Phase 2: web read model (M1 selesai)
+- [x] `lib/read-model.ts` — akses read model server-side dengan **safe-degrade**:
+  tanpa `DATABASE_URL` halaman render empty-state, bukan crash
+- [x] API routes: `/api/collections`, `/api/assets` (validasi pubkey + paginasi zod)
+- [x] Halaman `/explore` (RSC) — daftar koleksi + strip aset unggulan
+- [x] Halaman `/collection/[address]` — grid aset, validasi alamat, 404 lembut
+- [x] Halaman `/portfolio` + `WalletPortfolio` (client) — connect wallet → fetch
+  NFT dimiliki via `/api/assets?owner=` (end-to-end wallet → server → read model)
+- [x] Komponen `SiteHeader`/`AssetCard`/`CollectionCard`/`EmptyState` + nav konsisten
+- [x] Home page pakai `SiteHeader` (link `create` yang 404 diganti explore/portfolio)
+- [x] Smoke test dev server: `/`,`/explore`,`/portfolio`,`/collection/*` → 200;
+  `/api/*` benar; diuji dengan data seed nyata (Demo Cats) → muncul di UI, lalu dibersihkan
+
 ### 2026-10-14 — Phase 2: monorepo scaffold
 - [x] Root: `pnpm-workspace.yaml`, `package.json`, `turbo.json`, `.npmrc`, `.prettierrc`, `.nvmrc`, `.gitignore`
 - [x] `packages/config-ts` (base/nextjs/node tsconfig)
@@ -76,8 +89,14 @@
 1. ✅ `pnpm install`, `pnpm typecheck`, `pnpm test`, `pnpm build` — semua hijau (lihat Verifikasi).
 2. ✅ Setup Postgres lokal + `pnpm db:generate` (tanpa drift) → migrasi diterapkan.
 3. ✅ Wire indexer→read model: `syncCollection`/`syncOwner` + fungsi Inngest + integration test.
-4. Wallet connect end-to-end di devnet + halaman explore.
+4. ✅ Wallet connect + halaman explore/portfolio/collection membaca read model.
 5. ✅ GitHub Actions CI (lint, typecheck, test, build, secret scan) + Dependabot.
+
+## Berikutnya (menuju M3)
+1. Mint koleksi end-to-end via Candy Machine v3 (devnet).
+2. Escrow program (Auction House) + listing/buy (D1 di BLUEPRINT §12).
+3. Helius webhooks → `activities` (feed aktivitas realtime).
+4. OG image dinamis + sitemap (SEO).
 
 ## Verifikasi (2026-10-14)
 
@@ -86,7 +105,7 @@
 | `pnpm lint` | ✅ 10/10 tasks (0 warning) | turbo tasks successful |
 | `pnpm typecheck` | ✅ 10/10 tasks | tsc --noEmit per paket |
 | `pnpm test` | ✅ 6/6 tasks (19 tes + 3 DB-integration bila `DATABASE_URL` ada) | vitest |
-| `pnpm build` | ✅ 2/2 tasks | Next.js compiled, 4 route di-generate |
+| `pnpm build` | ✅ 2/2 tasks | Next.js compiled, 8 route di-generate |
 | Runtime | ✅ | `/api/health` → `{ok:true,...}`; `/` → HTTP 200; `/collection/[addr]` → HTTP 200 |
 
 Lingkungan: Node 22.23.1 (nvm) · pnpm 10.26.1 · Next.js 15.5.27 · Turbo 2.11.

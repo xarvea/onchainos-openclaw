@@ -60,10 +60,15 @@ micow/
 nvm use                 # Node 22.23.1
 pnpm install
 cp .env.example .env    # isi DATABASE_URL dst.
+pnpm db:migrate         # buat tabel read model (lihat docs/operations/env.md)
 pnpm typecheck
 pnpm test
 pnpm --filter @micow/web dev   # http://localhost:3000
 ```
+
+Halaman web: `/` (beranda), `/explore` (koleksi), `/collection/[address]`,
+`/portfolio` (NFT milik wallet). Data dibaca dari read model Postgres; bila
+`DATABASE_URL` belum diset, halaman tetap render dengan empty-state (tidak crash).
 
 ## Batasan etis
 Proyek ini **tidak** melakukan reverse engineering, scraping, atau penyalinan
