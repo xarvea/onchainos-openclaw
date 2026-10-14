@@ -1,18 +1,16 @@
 import { createInMemoryContainer } from '@micow/database';
 import { asPublicKey, type Asset } from '@micow/domain';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import { syncAsset } from './functions/sync-asset';
 import type { AssetIndexer } from './indexer-port';
 
 /**
- * A fake indexer standing in for Helius DAS in tests. Verifies the sync
- * use-case stores what the indexer returns (integration contract).
+ * A fake indexer standing in for Helius DAS in tests.
  */
 class FakeIndexer implements AssetIndexer {
+  readonly getAsset = vi.fn(async (mint: string): Promise<Asset | null> => this.byMint[mint] ?? null);
   constructor(private readonly byMint: Record<string, Asset>) {}
-  async getAsset(mint: string): Promise<Asset | null> {
-    return this.byMint[mint] ?? null;
-  }
   async getAssetsByOwner(): Promise<Asset[]> {
     return [];
   }
@@ -39,24 +37,27 @@ function makeAsset(): Asset {
   };
 }
 
-describe('sync-asset contract', () => {
-  it('stores the asset returned by the indexer', async () => {
+describe('syncAsset (real logic under test)', () => {
+  it('fetches from the indexer and upserts into the read model', async () => {
     const container = createInMemoryContainer();
     const indexer = new FakeIndexer({ [MINT]: makeAsset() });
 
-    const asset = await indexer.getAsset(MINT);
-    expect(asset).not.toBeNull();
-    if (asset) await container.assets.upsert(asset);
+    const result = await syncAsset({ indexer, assets: container.assets }, MINT);
 
+    expect(result).toEqual({ mint: MINT, stored: true });
+    expect(indexer.getAsset).toHaveBeenCalledWith(MINT);
     const stored = await container.assets.findByMint(MINT);
     expect(stored?.name).toBe('Fake #1');
+    expect(stored?.uri).toBe('https://x/1.json');
   });
 
-  it('no-ops when the indexer has no such asset', async () => {
+  it('no-ops (stored:false) when the indexer has no such asset', async () => {
     const container = createInMemoryContainer();
     const indexer = new FakeIndexer({});
-    const asset = await indexer.getAsset(MINT);
-    expect(asset).toBeNull();
+
+    const result = await syncAsset({ indexer, assets: container.assets }, MINT);
+
+    expect(result).toEqual({ mint: MINT, stored: false });
     expect(await container.assets.findByMint(MINT)).toBeNull();
   });
 });

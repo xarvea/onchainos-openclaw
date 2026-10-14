@@ -11,9 +11,31 @@ export interface SyncAssetDeps {
   assets: AssetRepository;
 }
 
+export interface SyncAssetResult {
+  mint: string;
+  stored: boolean;
+}
+
 /**
- * Build the sync function with injected dependencies. Kept as a factory so the
- * composition root (with real or fake indexer/repo) is wired in one place.
+ * Pure sync logic: fetch one asset from the indexer and upsert it into the
+ * read model. Extracted from the Inngest wrapper so it can be unit-tested
+ * directly (no Inngest runtime required) — see sync-asset.test.ts.
+ */
+export async function syncAsset(deps: SyncAssetDeps, mint: string): Promise<SyncAssetResult> {
+  const asset = await deps.indexer.getAsset(mint);
+  if (!asset) {
+    log.warn('asset not found on-chain, skipping', { mint });
+    return { mint, stored: false };
+  }
+  await deps.assets.upsert(asset);
+  log.info('asset upserted', { mint, owner: asset.owner });
+  return { mint, stored: true };
+}
+
+/**
+ * Build the Inngest function with injected dependencies. Kept as a factory so
+ * the composition root (with real or fake indexer/repo) is wired in one place.
+ * The body delegates to {@link syncAsset} so tested logic == shipped logic.
  */
 export function makeSyncAssetFunction(deps: SyncAssetDeps) {
   return inngest.createFunction(
@@ -21,19 +43,7 @@ export function makeSyncAssetFunction(deps: SyncAssetDeps) {
     { event: 'micow/asset.sync' },
     async ({ event, step }) => {
       const { mint } = event.data as { mint: string };
-
-      const result = await step.run('fetch-and-upsert', async () => {
-        const asset = await deps.indexer.getAsset(mint);
-        if (!asset) {
-          log.warn('asset not found on-chain, skipping', { mint });
-          return { mint, stored: false };
-        }
-        await deps.assets.upsert(asset);
-        log.info('asset upserted', { mint, owner: asset.owner });
-        return { mint, stored: true };
-      });
-
-      return result;
+      return step.run('fetch-and-upsert', () => syncAsset(deps, mint));
     },
   );
 }

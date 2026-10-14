@@ -17,8 +17,20 @@
 - [x] Riset stack Solana (Metaplex Core, Candy Machine v3, DAS, Helius, escrow, wallet)
 - [x] `docs/product/BLUEPRINT.md` (visi, scope, arsitektur, protocol, data, threat, roadmap)
 - [x] `docs/architecture/research-solana-nft-stack.md`
-- [x] `docs/adr/ADR-0001..0007.md`
+- [x] `docs/adr/ADR-0001..0007` (7 file terpisah) + `docs/adr/README.md` (indeks)
 - [x] Koreksi deploy: NO VERCEL → Cloudflare Pages
+
+### 2026-10-14 — Phase 2: perbaikan pasca-review
+- [x] `git init` + commit awal (106 file, tanpa node_modules/artifacts)
+- [x] `.nvmrc` diperbaiki — sebelumnya berisi komentar sehingga `nvm use` gagal
+- [x] ADR dipecah: `docs/adr/ADR-0001..0007` (7 file) + `README.md` (indeks)
+- [x] Bug DAS (`packages/solana`): `uri` diambil dari `json_uri` (bukan `''`),
+  image prefer `files[].cdn_uri` > `links.image`, `getCollection` tak lagi
+  mengarang `verified`/`standard`, paginasi penuh (loop halaman, cap 100)
+- [x] `sync-asset`: logika diekstrak ke `syncAsset()` murni (bisa diuji tanpa
+  Inngest); test lama hanya mereplikasi logika → false coverage, sudah dibuang
+- [x] Test baru: `packages/solana/src/das.test.ts` (6 tes mapping DAS)
+- [x] Lint: `container.ts` pakai `import type * as schema` → 0 warning
 
 ### 2026-10-14 — Phase 2: monorepo scaffold
 - [x] Root: `pnpm-workspace.yaml`, `package.json`, `turbo.json`, `.npmrc`, `.prettierrc`, `.nvmrc`, `.gitignore`
@@ -47,9 +59,9 @@
 
 | Pipeline | Hasil | Bukti |
 |----------|-------|-------|
-| `pnpm lint` | ✅ 10/10 tasks | turbo tasks successful |
+| `pnpm lint` | ✅ 10/10 tasks (0 warning) | turbo tasks successful |
 | `pnpm typecheck` | ✅ 10/10 tasks | tsc --noEmit per paket |
-| `pnpm test` | ✅ 4/4 tasks (domain 4/4 tests) | vitest |
+| `pnpm test` | ✅ 6/6 tasks (15 tes: domain 4, database 3, solana 6, worker 2) | vitest |
 | `pnpm build` | ✅ 2/2 tasks | Next.js compiled, 5 route di-generate |
 | Runtime | ✅ | `/api/health` → `{ok:true,...}`; `/` → HTTP 200; `/collection/[addr]` → HTTP 200 |
 

@@ -42,7 +42,7 @@ micow/
 ├── docs/
 │   ├── product/      # BLUEPRINT.md
 │   ├── architecture/ # research-solana-nft-stack.md
-│   ├── adr/          # ADR-0001..0007.md
+│   ├── adr/          # ADR-0001..0007 (satu file per ADR) + README.md
 │   └── operations/   # env.md
 └── PROGRESS.md
 ```

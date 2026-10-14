@@ -14,7 +14,7 @@ import {
   DrizzleCollectionRepository,
   DrizzleListingRepository,
 } from './repositories/index';
-import * as schema from './schema/index';
+import type * as schema from './schema/index';
 
 /** Concrete Drizzle database handle type. */
 export type DrizzleDb = ReturnType<typeof drizzle<typeof schema>>;
