@@ -10,20 +10,23 @@
     "./das": "./src/das.ts",
     "./cluster": "./src/cluster.ts",
     "./helius-webhook": "./src/helius-webhook.ts",
-    "./umi-client": "./src/umi-client.ts"
+    "./launch": "./src/launch.ts",
+    "./umi-client": "./src/umi-client.ts",
+    "./umi-minter": "./src/umi-minter.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
-    "test": "vitest run"
+    "test": "vitest run",
+    "launch:probe": "tsx scripts/probe-launch.ts"
   },
   "dependencies": {
-    "@metaplex-foundation/mpl-candy-machine": "^6.1.0",
     "@metaplex-foundation/mpl-core": "^1.10.0",
     "@metaplex-foundation/mpl-core-candy-machine": "0.3.0",
     "@metaplex-foundation/umi": "^1.6.0",
     "@metaplex-foundation/umi-bundle-defaults": "^1.6.0",
     "@metaplex-foundation/umi-web3js-adapters": "^1.6.0",
+    "@micow/application": "workspace:*",
     "@micow/domain": "workspace:*",
     "@noble/hashes": "^1.8.0",
     "@solana/web3.js": "^1.99.0"
@@ -31,6 +34,7 @@
   "devDependencies": {
     "@micow/config-ts": "workspace:*",
     "@types/node": "^22.10.5",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }

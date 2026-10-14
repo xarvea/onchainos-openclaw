@@ -76,6 +76,22 @@
   DB dedup 1 baris meski payload dikirim 2×, `/api/activities` & `/activity` render
   (badge SALE, 1.5 SOL), OG image PNG 1200×630, robots/sitemap valid
 
+### 2026-10-14 — M3 #1: launch/mint Candy Machine v3 + Core (devnet)
+- [x] Keputusan: D1 = Auction House (ADR-0005 Accepted), D3 = devnet;
+  ADR-0008 baru: launch via Candy Machine v3 + Core (Umi), tanpa program kustom
+- [x] `packages/solana` — dependency Umi + `mpl-core` + `mpl-core-candy-machine`
+  (paket Core yang benar; `mpl-candy-machine` biasa = Token Metadata-only)
+- [x] `umi-client.ts` — factory Umi (Core + Core Candy Machine) + loader keypair CLI
+- [x] `launch.ts` — helper murni: `computeConfigLineSettings`, `buildMintGuards`,
+  `assertValidItems` (13 unit test)
+- [x] Port `CollectionMinter` (@micow/application) + `UmiCollectionMinter`
+  (create Core collection → CM v3 + guards → insert items, chunked)
+- [x] `scripts/probe-launch.ts` + script `pnpm --filter @micow/solana launch:probe`
+- [x] **Terverifikasi on-chain (devnet)**: Core collection (owner program Core) +
+  Candy Machine v3 (owner program `CMACYFE…`), items terisi, via minter asli
+- [x] Fix env: hapus `NODE_ENV=development` dari `.env*` (merusak `next build` bila
+  di-source) + wallet-provider fallback saat `NEXT_PUBLIC_SOLANA_RPC_URL` kosong
+
 ### 2026-10-14 — Phase 2: web read model (M1 selesai)
 - [x] `lib/read-model.ts` — akses read model server-side dengan **safe-degrade**:
   tanpa `DATABASE_URL` halaman render empty-state, bukan crash

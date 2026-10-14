@@ -54,3 +54,30 @@ export interface ListingGateway {
   buildCancelListingTx(input: { listingId: string; seller: string }): Promise<{ serializedTx: string }>;
   buildBuyTx(input: { listingId: string; buyer: string }): Promise<{ serializedTx: string }>;
 }
+
+/**
+ * Creates a collection + public-mint launch on-chain (Candy Machine v3 + Core).
+ * Implemented in infra (Umi). Admin operation — never invoked from the browser;
+ * the interactive mint itself is signed by the user's wallet client-side.
+ */
+export interface CollectionMinter {
+  /**
+   * Create a Core collection and a Candy Machine that mints items into it.
+   * Returns the addresses of the created accounts. Idempotency is the caller's
+   * concern — each call creates fresh accounts.
+   */
+  launchCollection(input: {
+    name: string;
+    /** Off-chain metadata URI for the collection (uploaded separately). */
+    uri: string;
+    items: { name: string; uri: string }[];
+    /** Mint price in lamports (0 = free). */
+    priceLamports: bigint;
+    /** Treasury receiving proceeds (required when price > 0). */
+    treasury: string;
+    /** Max mints per wallet (0 = unlimited). */
+    mintLimitPerWallet: number;
+    /** Royalty in basis points (0-10000). */
+    royaltyBps: number;
+  }): Promise<{ collection: string; candyMachine: string; signatures: string[] }>;
+}
