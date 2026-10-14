@@ -35,8 +35,39 @@ tanpa DAS, boleh kosong.
 ```bash
 cp .env.example .env
 # isi DATABASE_URL dst.
-pnpm db:generate   # drizzle-kit generate migrations
+pnpm db:generate   # drizzle-kit generate migrations (review output!)
 pnpm db:migrate    # apply ke Postgres
 ```
 
 Validasi cepat: `GET /api/health` mengembalikan `{ ok: true, ... }` bila env server valid.
+
+### Postgres lokal (dari nol)
+
+```bash
+# 1. Buat role + database (peer auth lewat postgres superuser).
+sudo -u postgres psql -c "CREATE ROLE micow WITH LOGIN PASSWORD 'micow';"
+sudo -u postgres createdb -O micow micow
+
+# 2. Arahkan DATABASE_URL ke DB itu.
+echo 'DATABASE_URL=postgres://micow:micow@127.0.0.1:5432/micow' >> .env
+
+# 3. Terapkan migrasi.
+pnpm db:migrate
+
+# 4. Verifikasi tabel terbentuk.
+psql "$DATABASE_URL" -c '\dt'
+# → activities, assets, collections, listings, sync_jobs
+```
+
+### Integration test DB
+
+`packages/database/src/repositories.integration.test.ts` menjalankan repo Drizzle
+terhadap **Postgres asli** (schema sekali-pakai, di-drop setelah selesai). Test ini
+otomatis **di-skip** bila `DATABASE_URL` tidak diset, jadi aman di mesin tanpa DB.
+
+```bash
+DATABASE_URL=postgres://micow:micow@127.0.0.1:5432/micow pnpm test
+```
+
+Di CI, Postgres 16 disediakan sebagai service container sehingga test ini benar-benar
+jalan (lihat `.github/workflows/ci.yml`).
