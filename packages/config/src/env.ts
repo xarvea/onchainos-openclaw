@@ -18,6 +18,13 @@ export const clientEnvSchema = z.object({
   NEXT_PUBLIC_SOLANA_RPC_URL: z.string().url().default('https://api.devnet.solana.com'),
   /** Canonical public origin, used for metadata/OG/sitemap absolute URLs. */
   NEXT_PUBLIC_SITE_URL: z.string().url().default('http://localhost:3000'),
+
+  // Launch / mint economics exposed to the UI (safe — no secrets).
+  NEXT_PUBLIC_ASSET_BASE_URI: z.string().url().optional(),
+  NEXT_PUBLIC_MINT_PRICE_SOL: z.coerce.number().min(0).default(0.01),
+  NEXT_PUBLIC_MINT_LIMIT_PER_WALLET: z.coerce.number().int().min(0).default(2),
+  NEXT_PUBLIC_ROYALTY_BPS: z.coerce.number().int().min(0).max(10_000).default(500),
+  NEXT_PUBLIC_TREASURY_WALLET: z.string().optional(),
 });
 
 /** Variables that must NEVER reach the browser. */
@@ -33,6 +40,12 @@ export const serverEnvSchema = z.object({
   // Solana infrastructure
   HELIUS_API_KEY: z.string().min(1).optional(),
   HELIUS_WEBHOOK_SECRET: z.string().min(1).optional(),
+
+  // Launch / mint (Candy Machine v3 + Core) — server-only admin ops
+  SOLANA_KEYPAIR_PATH: z.string().min(1).optional(),
+  SOLANA_RPC_URL: z.string().url().optional(),
+  IRYS_SECRET_KEY: z.string().min(1).optional(),
+  IRYS_NODE_URL: z.string().url().optional(),
 
   // Object storage (asset caching)
   S3_ENDPOINT: z.string().url().optional(),

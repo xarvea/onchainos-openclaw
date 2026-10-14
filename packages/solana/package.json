@@ -9,7 +9,8 @@
     ".": "./src/index.ts",
     "./das": "./src/das.ts",
     "./cluster": "./src/cluster.ts",
-    "./helius-webhook": "./src/helius-webhook.ts"
+    "./helius-webhook": "./src/helius-webhook.ts",
+    "./umi-client": "./src/umi-client.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -17,8 +18,15 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@metaplex-foundation/mpl-candy-machine": "^6.1.0",
+    "@metaplex-foundation/mpl-core": "^1.10.0",
+    "@metaplex-foundation/mpl-core-candy-machine": "0.3.0",
+    "@metaplex-foundation/umi": "^1.6.0",
+    "@metaplex-foundation/umi-bundle-defaults": "^1.6.0",
+    "@metaplex-foundation/umi-web3js-adapters": "^1.6.0",
     "@micow/domain": "workspace:*",
-    "@solana/web3.js": "^1.98.0"
+    "@noble/hashes": "^1.8.0",
+    "@solana/web3.js": "^1.99.0"
   },
   "devDependencies": {
     "@micow/config-ts": "workspace:*",

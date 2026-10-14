@@ -287,13 +287,16 @@ Urutan implementasi Phase 3 (dependency-correct):
 
 ## 12. Keputusan tertunda (perlu dijawab sebelum Phase 2)
 
-| # | Pertanyaan | Default usulan |
-|---|-----------|----------------|
-| D1 | Escrow: pakai **Auction House (standar)** atau **program Anchor sendiri**? | Auction House dulu (cepat, teruji), custom kemudian |
-| D2 | Wallet: cukup **Wallet Adapter** atau tambah **Privy** (email login)? | Adapter dulu, Privy di M5 |
-| D3 | Network awal: devnet → mainnet-beta | devnet untuk semua M1–M5 |
-| D4 | Nama & identitas brand "micow" (logo, domain, dll) | TBD |
-| D5 | Model fee platform (%) dan enforcement royalty | TBD (ditentukan di tokenomics) |
+| # | Pertanyaan | Status / Keputusan |
+|---|-----------|---------------------|
+| D1 | Escrow: pakai **Auction House (standar)** atau **program Anchor sendiri**? | ✅ **Auction House** (ADR-0005) — custom kemudian bila perlu |
+| D2 | Wallet: cukup **Wallet Adapter** atau tambah **Privy** (email login)? | 🔶 Adapter dulu (ADR-0004); Privy ditunda ke M5 |
+| D3 | Network awal: devnet → mainnet-beta | ✅ **devnet** untuk M1–M5 |
+| D4 | Nama & identitas brand "micow" (logo, domain, dll) | ⬜ TBD |
+| D5 | Model fee platform (%) dan enforcement royalty | 🔶 mengikuti guard CM + Auction House (ADR-0005/0008); angka final TBD |
+
+Tambahan: jalur launch/mint diputuskan di **ADR-0008** (Candy Machine v3 + Core
+via Umi, tanpa program kustom).
 
 ---
 
