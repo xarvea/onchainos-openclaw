@@ -3,7 +3,7 @@ import { createContainer, createDb } from '@micow/database';
 import { logger } from '@micow/observability';
 import { HeliusDasIndexer } from '@micow/solana';
 
-import { makeSyncAssetFunction } from './functions/sync-asset';
+import { makeSyncAssetFunction, makeSyncCollectionFunction } from './functions/sync-asset';
 
 const log = logger.child({ app: 'micow-worker' });
 
@@ -31,7 +31,13 @@ export function buildWorker() {
         throw new Error('HELIUS_API_KEY is required for the asset indexer');
       })();
 
-  const functions = [makeSyncAssetFunction({ indexer, assets: container.assets })];
+  const deps = {
+    indexer,
+    assets: container.assets,
+    collections: container.collections,
+  };
+
+  const functions = [makeSyncAssetFunction(deps), makeSyncCollectionFunction(deps)];
 
   log.info('micow worker assembled', { functions: functions.length });
   return { handler: functions, container };

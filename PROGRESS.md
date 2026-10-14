@@ -35,6 +35,16 @@
 - [x] `.github/dependabot.yml` (paket npm/pnpm + GitHub Actions, mingguan)
 - [x] Dokumen konsisten: sisa referensi "Vercel" → Cloudflare Pages
 
+### 2026-10-14 — Phase 2: wire indexer → read model
+- [x] Worker: use case `syncCollection`, `syncOwner`, `syncCollectionMeta` (paginasi
+  ditangani indexer; upsert batch ke `AssetRepository`)
+- [x] Fungsi Inngest kedua: `sync-collection` (event `micow/collection.sync`)
+- [x] `buildWorker` merakit 2 fungsi + meneruskan `collections` repo ke deps
+- [x] Port `AssetIndexer` diperluas (opsi limit/page, `getCollection` opsional)
+- [x] Integration test `indexer-integration.test.ts`: pakai `HeliusDasIndexer` ASLI
+  dengan `global.fetch` di-mock → membuktikan pipeline DAS JSON → domain → repo,
+  termasuk paginasi 1001 aset lintas 2 halaman
+
 ### 2026-10-14 — Phase 2: monorepo scaffold
 - [x] Root: `pnpm-workspace.yaml`, `package.json`, `turbo.json`, `.npmrc`, `.prettierrc`, `.nvmrc`, `.gitignore`
 - [x] `packages/config-ts` (base/nextjs/node tsconfig)
@@ -54,7 +64,7 @@
 ## Berikutnya (M1 selesai → M2)
 1. ✅ `pnpm install`, `pnpm typecheck`, `pnpm test`, `pnpm build` — semua hijau (lihat Verifikasi).
 2. Setup Postgres DB lokal + `pnpm db:generate` → review migration.
-3. Wire `HeliusDasIndexer` ke `AssetRepository` (Drizzle) + worker upsert.
+3. ✅ Wire indexer→read model: `syncCollection`/`syncOwner` + fungsi Inngest + integration test.
 4. Wallet connect end-to-end di devnet + halaman explore.
 5. ✅ GitHub Actions CI (lint, typecheck, test, build, secret scan) + Dependabot.
 
@@ -64,7 +74,7 @@
 |----------|-------|-------|
 | `pnpm lint` | ✅ 10/10 tasks (0 warning) | turbo tasks successful |
 | `pnpm typecheck` | ✅ 10/10 tasks | tsc --noEmit per paket |
-| `pnpm test` | ✅ 6/6 tasks (15 tes: domain 4, database 3, solana 6, worker 2) | vitest |
+| `pnpm test` | ✅ 6/6 tasks (19 tes: domain 4, database 3, solana 6, worker 6) | vitest |
 | `pnpm build` | ✅ 2/2 tasks | Next.js compiled, 4 route di-generate |
 | Runtime | ✅ | `/api/health` → `{ok:true,...}`; `/` → HTTP 200; `/collection/[addr]` → HTTP 200 |
 
