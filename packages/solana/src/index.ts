@@ -3,5 +3,6 @@ export * from './das';
 export * from './helius';
 export * from './helius-webhook';
 export * from './launch';
+export * from './storage';
 export * from './umi-client';
 export * from './umi-minter';

@@ -11,6 +11,7 @@
     "./cluster": "./src/cluster.ts",
     "./helius-webhook": "./src/helius-webhook.ts",
     "./launch": "./src/launch.ts",
+    "./storage": "./src/storage.ts",
     "./umi-client": "./src/umi-client.ts",
     "./umi-minter": "./src/umi-minter.ts"
   },

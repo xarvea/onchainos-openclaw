@@ -92,6 +92,24 @@
 - [x] Fix env: hapus `NODE_ENV=development` dari `.env*` (merusak `next build` bila
   di-source) + wallet-provider fallback saat `NEXT_PUBLIC_SOLANA_RPC_URL` kosong
 
+### 2026-10-14 — M3 #1 lanjutan: mint → read model (pipeline end-to-end)
+- [x] Port `MetadataStorage` (@micow/application) — `putJson`/`putBytes`, framework-free
+- [x] `packages/solana/src/storage.ts` — `InlineJsonStorage` (data-URI, offline) +
+  `HttpStorage` (endpoint → `{ uri }`, Irys/ArDrive-agnostic) + 6 unit test
+- [x] Use case `launchCollection` (@micow/application) — urutan metadata → storage →
+  minter → read model; **abort sebelum chain bila storage gagal** (tak buang SOL);
+  6 unit test (termasuk "tak pernah memalsukan `verified=true`")
+- [x] Keputusan desain: **tidak** menulis baris aset saat launch — Candy Machine
+  hanya menyimpan *config lines*, bukan aset ter-mint. Baris aset diisi indexer
+  (`syncCollection` → DAS) saat mint masuk on-chain (mencegah phantom + tabrakan PK)
+- [x] `apps/worker/scripts/probe-launch-e2e.ts` + script
+  `pnpm --filter @micow/worker launch:e2e` — menjalankan use case asli dengan
+  storage HTTP lokal (URI `http://…` benar-benar resolvable, lolos validasi minter)
+- [x] **Terverifikasi on-chain (devnet)**: collection `96n8WA8…`, CM `2jAxFB6…`,
+  3 signature; read model terisi `{name, size:2, verified:false}` ✅
+- [x] Verifikasi penuh: typecheck 10/10, lint 10/10, test 56 (application 6,
+  solana 37, domain 4, database 3+4 skip, worker 6), build 14 route + worker dist
+
 ### 2026-10-14 — Phase 2: web read model (M1 selesai)
 - [x] `lib/read-model.ts` — akses read model server-side dengan **safe-degrade**:
   tanpa `DATABASE_URL` halaman render empty-state, bukan crash

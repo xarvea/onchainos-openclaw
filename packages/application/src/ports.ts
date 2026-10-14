@@ -56,6 +56,29 @@ export interface ListingGateway {
 }
 
 /**
+ * Off-chain metadata storage (Arweave via Irys, or any other content-addressed
+ * host). Implemented in infra. The application layer never talks to a storage
+ * SDK directly — it only asks for a URI, which is then embedded in the on-chain
+ * collection/asset metadata.
+ */
+export interface MetadataStorage {
+  /**
+   * Persist a UTF-8 metadata object (already JSON-serializable) and return an
+   * immutable URI that resolves to it. Implementations must fail loudly on
+   * error — a launch with a broken URI produces un-metadata'd assets on-chain.
+   */
+  putJson(json: Record<string, unknown>): Promise<{ uri: string }>;
+  /**
+   * Persist raw bytes (an image) and return the URI that resolves to it.
+   * Used before `putJson` so the metadata can reference the image URI.
+   */
+  putBytes(
+    data: Uint8Array,
+    opts: { contentType: string; fileName?: string },
+  ): Promise<{ uri: string }>;
+}
+
+/**
  * Creates a collection + public-mint launch on-chain (Candy Machine v3 + Core).
  * Implemented in infra (Umi). Admin operation — never invoked from the browser;
  * the interactive mint itself is signed by the user's wallet client-side.
