@@ -1,4 +1,6 @@
 import type {
+  Activity,
+  ActivityRepository,
   Asset,
   AssetRepository,
   Collection,
@@ -10,6 +12,7 @@ import type {
 import type { drizzle } from 'drizzle-orm/postgres-js';
 
 import {
+  DrizzleActivityRepository,
   DrizzleAssetRepository,
   DrizzleCollectionRepository,
   DrizzleListingRepository,
@@ -23,6 +26,7 @@ export interface Container {
   assets: AssetRepository;
   collections: CollectionRepository;
   listings: ListingRepository;
+  activities: ActivityRepository;
 }
 
 /**
@@ -34,6 +38,7 @@ export function createContainer(db: DrizzleDb): Container {
     assets: new DrizzleAssetRepository(db),
     collections: new DrizzleCollectionRepository(db),
     listings: new DrizzleListingRepository(db),
+    activities: new DrizzleActivityRepository(db),
   };
 }
 
@@ -89,11 +94,61 @@ export class InMemoryListingRepository implements ListingRepository {
   }
 }
 
+export class InMemoryActivityRepository implements ActivityRepository {
+  private readonly store = new Map<string, Activity>();
+
+  async record(activity: Activity): Promise<void> {
+    // Append-only: replays are a no-op, matching the Drizzle `DO NOTHING` impl.
+    if (!this.store.has(activity.id)) this.store.set(activity.id, activity);
+  }
+
+  async recordMany(items: Activity[]): Promise<void> {
+    for (const a of items) await this.record(a);
+  }
+
+  private sorted(): Activity[] {
+    return [...this.store.values()].sort((a, b) => b.blockTime.getTime() - a.blockTime.getTime());
+  }
+
+  async listByAsset(
+    asset: string,
+    opts: { limit?: number; offset?: number } = {},
+  ): Promise<Activity[]> {
+    return this.page(
+      this.sorted().filter((a) => a.asset === asset),
+      opts,
+    );
+  }
+
+  async listByCollection(
+    collection: string,
+    opts: { limit?: number; offset?: number } = {},
+  ): Promise<Activity[]> {
+    return this.page(
+      this.sorted().filter((a) => a.collection === collection),
+      opts,
+    );
+  }
+
+  async listRecent(opts: { limit?: number; offset?: number } = {}): Promise<Activity[]> {
+    return this.page(this.sorted(), opts);
+  }
+
+  private page(items: Activity[], opts: { limit?: number; offset?: number }): Activity[] {
+    return items.slice(opts.offset ?? 0, (opts.offset ?? 0) + (opts.limit ?? 50));
+  }
+
+  get size(): number {
+    return this.store.size;
+  }
+}
+
 /** In-memory container for unit tests. */
 export function createInMemoryContainer(): Container {
   return {
     assets: new InMemoryAssetRepository(),
     collections: new InMemoryCollectionRepository(),
     listings: new InMemoryListingRepository(),
+    activities: new InMemoryActivityRepository(),
   };
 }

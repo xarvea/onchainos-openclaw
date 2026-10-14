@@ -14,6 +14,12 @@ export function SiteHeader() {
           Jelajahi
         </Link>
         <Link
+          href="/activity"
+          className="text-sm text-[var(--micow-muted)] hover:text-[var(--micow-fg)]"
+        >
+          Aktivitas
+        </Link>
+        <Link
           href="/portfolio"
           className="text-sm text-[var(--micow-muted)] hover:text-[var(--micow-fg)]"
         >

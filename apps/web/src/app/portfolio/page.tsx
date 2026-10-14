@@ -6,6 +6,9 @@ import { WalletPortfolio } from '@/components/wallet-portfolio';
 export const metadata: Metadata = {
   title: 'Portofolio',
   description: 'NFT yang kamu miliki di MICOW.',
+  alternates: { canonical: '/portfolio' },
+  // User-specific view — keep it out of search indexes (robots.txt also disallows).
+  robots: { index: false, follow: false },
 };
 
 export default function PortfolioPage() {

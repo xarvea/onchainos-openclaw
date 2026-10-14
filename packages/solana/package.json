@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./das": "./src/das.ts",
-    "./cluster": "./src/cluster.ts"
+    "./cluster": "./src/cluster.ts",
+    "./helius-webhook": "./src/helius-webhook.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

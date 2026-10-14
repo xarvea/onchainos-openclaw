@@ -16,6 +16,8 @@ export const clientEnvSchema = z.object({
     .enum(['devnet', 'testnet', 'mainnet-beta'])
     .default('devnet'),
   NEXT_PUBLIC_SOLANA_RPC_URL: z.string().url().default('https://api.devnet.solana.com'),
+  /** Canonical public origin, used for metadata/OG/sitemap absolute URLs. */
+  NEXT_PUBLIC_SITE_URL: z.string().url().default('http://localhost:3000'),
 });
 
 /** Variables that must NEVER reach the browser. */

@@ -128,6 +128,60 @@ suite('Drizzle repositories (real Postgres)', () => {
     expect(await container.listings.findActiveByAsset(asset)).toBeNull();
   });
 
+  it('activities: idempotent record, bigint price round-trip, ordering by blockTime', async () => {
+    const container = createContainer(db);
+    const asset = 'So11111111111111111111111111111111111111114';
+    const collection = 'Co11ecT1111111111111111111111111111111111111';
+    const from = '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin';
+    const to = '3xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFi1';
+    const sig = '5'.repeat(88);
+    const price = 1_500_000_000n; // 1.5 SOL — exceeds 2^31
+
+    const sale = {
+      id: `${sig}:${asset}:SALE`,
+      type: 'SALE' as const,
+      asset: asset as never,
+      collection: collection as never,
+      from: from as never,
+      to: to as never,
+      price: price as never,
+      txSignature: sig as never,
+      blockTime: new Date('2026-06-01T00:00:00Z'),
+      slot: 999_999_999_999n as never, // > 2^32, must not overflow
+    };
+
+    await container.activities.record(sale);
+    // Replay the same delivery — must be a no-op (append-only).
+    await container.activities.record(sale);
+    await container.activities.recordMany([sale]);
+
+    const byAsset = await container.activities.listByAsset(asset);
+    expect(byAsset).toHaveLength(1); // deduped by id
+    expect(byAsset[0]!.price).toBe(price); // bigint preserved exactly
+    expect(byAsset[0]!.slot).toBe(999_999_999_999n);
+    expect(byAsset[0]!.collection).toBe(collection);
+    expect(byAsset[0]!.from).toBe(from);
+
+    // A second, older event for the same asset → newest first.
+    const older = {
+      ...sale,
+      id: `${sig}:${asset}:TRANSFER`,
+      type: 'TRANSFER' as const,
+      price: null,
+      blockTime: new Date('2026-05-01T00:00:00Z'),
+    };
+    await container.activities.record(older);
+    const ordered = await container.activities.listByAsset(asset);
+    expect(ordered.map((a) => a.type)).toEqual(['SALE', 'TRANSFER']);
+
+    const byCollection = await container.activities.listByCollection(collection);
+    expect(byCollection.length).toBe(2);
+
+    const recent = await container.activities.listRecent({ limit: 1 });
+    expect(recent).toHaveLength(1);
+    expect(recent[0]!.type).toBe('SALE');
+  });
+
   it('raw smoke: the migration actually created all 5 tables', async () => {
     const res = await db.execute(
       rawSql`select tablename from pg_tables where schemaname = current_schema() order by tablename`,

@@ -9,6 +9,12 @@ export const revalidate = 30;
 export const metadata: Metadata = {
   title: 'Jelajahi koleksi',
   description: 'Jelajahi koleksi NFT di MICOW — marketplace Solana berbasis standar terbuka.',
+  alternates: { canonical: '/explore' },
+  openGraph: {
+    title: 'Jelajahi koleksi · MICOW',
+    description: 'Jelajahi koleksi NFT di MICOW — marketplace Solana berbasis standar terbuka.',
+    url: '/explore',
+  },
 };
 
 export default async function ExplorePage() {

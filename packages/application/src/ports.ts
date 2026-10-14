@@ -1,4 +1,4 @@
-import type { Asset, Collection, Listing, ListingStatus } from '@micow/domain';
+import type { Activity, Asset, Collection, Listing, ListingStatus } from '@micow/domain';
 
 /**
  * Ports (interfaces) that the application layer depends on. Infrastructure
@@ -23,6 +23,24 @@ export interface ListingRepository {
   findActiveByAsset(asset: string): Promise<Listing | null>;
   create(listing: Listing): Promise<void>;
   updateStatus(id: string, status: ListingStatus): Promise<void>;
+}
+
+/**
+ * Append-only feed of on-chain events (mints, transfers, sales, listings).
+ * Fed by Helius webhooks / backfill; keyed by a deterministic id so replays and
+ * duplicate deliveries are idempotent.
+ */
+export interface ActivityRepository {
+  /** Idempotent insert keyed on `activity.id`. Safe to replay. */
+  record(activity: Activity): Promise<void>;
+  /** Record many in one round-trip; must itself be idempotent. */
+  recordMany(activities: Activity[]): Promise<void>;
+  listByAsset(asset: string, opts?: { limit?: number; offset?: number }): Promise<Activity[]>;
+  listByCollection(
+    collection: string,
+    opts?: { limit?: number; offset?: number },
+  ): Promise<Activity[]>;
+  listRecent(opts?: { limit?: number; offset?: number }): Promise<Activity[]>;
 }
 
 /** Broadcaster for on-chain writes (list/buy/cancel). Implemented in infra. */

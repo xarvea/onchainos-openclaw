@@ -1,5 +1,5 @@
 import { createContainer, createDb, type Container } from '@micow/database';
-import type { Asset, Collection } from '@micow/domain';
+import type { Activity, Asset, Collection } from '@micow/domain';
 import { logger } from '@micow/observability';
 
 /**
@@ -82,4 +82,37 @@ export async function listAssetsByOwner(
   let assets = await c.assets.findByOwner(owner).catch(() => [] as Asset[]);
   if (opts.limit) assets = assets.slice(0, opts.limit);
   return { items: assets, enabled: true };
+}
+
+export async function listRecentActivities(
+  opts: { limit?: number; offset?: number } = {},
+): Promise<ListResult<Activity>> {
+  const c = readModel();
+  if (!c) return { items: [], enabled: false };
+  const items = await c.activities.listRecent(opts).catch(() => [] as Activity[]);
+  return { items, enabled: true };
+}
+
+export async function listActivitiesByAsset(
+  asset: string,
+  opts: { limit?: number } = {},
+): Promise<ListResult<Activity>> {
+  const c = readModel();
+  if (!c) return { items: [], enabled: false };
+  const items = await c.activities.listByAsset(asset, opts).catch(() => [] as Activity[]);
+  return { items, enabled: true };
+}
+
+/**
+ * Persist activities into the read model (idempotent). Returns false when no
+ * database is configured, so the webhook can answer 503 rather than silently
+ * dropping events. Errors propagate — a webhook must not claim success on a
+ * failed write or Helius will stop retrying.
+ */
+export async function recordActivities(activities: Activity[]): Promise<boolean> {
+  const c = readModel();
+  if (!c) return false;
+  if (activities.length === 0) return true;
+  await c.activities.recordMany(activities);
+  return true;
 }

@@ -13,9 +13,23 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { address } = await params;
+  const { items } = await getCollection(address).catch(() => ({ items: [], enabled: false }));
+  const collection = items[0] ?? null;
+  const label = collection?.name
+    ? `${collection.name}${collection.verified ? ' ✓' : ''}`
+    : `Collection ${address.slice(0, 4)}…${address.slice(-4)}`;
+
   return {
-    title: `Collection ${address.slice(0, 4)}…${address.slice(-4)}`,
-    description: `Browse NFTs in collection ${address} on MICOW.`,
+    title: label,
+    description:
+      collection?.description ??
+      `Browse NFTs in collection ${address} on MICOW — a Solana marketplace built on open standards.`,
+    alternates: { canonical: `/collection/${address}` },
+    openGraph: {
+      title: label,
+      description: collection?.description ?? `NFT collection ${address} on MICOW.`,
+      url: `/collection/${address}`,
+    },
   };
 }
 
