@@ -21,6 +21,9 @@ export interface CollectionRepository {
 
 export interface ListingRepository {
   findActiveByAsset(asset: string): Promise<Listing | null>;
+  findById(id: string): Promise<Listing | null>;
+  listActiveBySeller(seller: string): Promise<Listing[]>;
+  listActive(opts?: { limit?: number; offset?: number }): Promise<Listing[]>;
   create(listing: Listing): Promise<void>;
   updateStatus(id: string, status: ListingStatus): Promise<void>;
 }
@@ -43,16 +46,40 @@ export interface ActivityRepository {
   listRecent(opts?: { limit?: number; offset?: number }): Promise<Activity[]>;
 }
 
-/** Broadcaster for on-chain writes (list/buy/cancel). Implemented in infra. */
+/**
+ * Broadcaster for on-chain listing writes (list/buy/cancel).
+ *
+ * Model: **non-custodial** (ADR-0005 rev). The asset stays in the seller's
+ * wallet; listing works by granting MICOW's delegate authority over the asset
+ * via Core's `Transfer Delegate` plugin. Buying transfers seller→buyer (the
+ * delegate authority is revoked by Core automatically after the transfer).
+ * Cancelling revokes the delegate.
+ *
+ * All methods return an **unsigned, serialized** transaction — the backend never
+ * signs for the user (BLUEPRINT §3). Signing happens in the user's wallet.
+ */
 export interface ListingGateway {
   buildCreateListingTx(input: {
     asset: string;
     seller: string;
-    priceLamports: bigint;
+    /** Delegate authority (MICOW) that will be granted transfer rights. */
+    delegate: string;
     expiresAt?: Date;
   }): Promise<{ serializedTx: string }>;
-  buildCancelListingTx(input: { listingId: string; seller: string }): Promise<{ serializedTx: string }>;
-  buildBuyTx(input: { listingId: string; buyer: string }): Promise<{ serializedTx: string }>;
+  buildCancelListingTx(input: {
+    listingId: string;
+    asset: string;
+    seller: string;
+    delegate: string;
+  }): Promise<{ serializedTx: string }>;
+  buildBuyTx(input: {
+    listingId: string;
+    asset: string;
+    seller: string;
+    buyer: string;
+    delegate: string;
+    priceLamports: bigint;
+  }): Promise<{ serializedTx: string }>;
 }
 
 /**

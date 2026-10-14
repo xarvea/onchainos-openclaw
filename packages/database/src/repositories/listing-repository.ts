@@ -20,6 +20,32 @@ export class DrizzleListingRepository implements ListingRepository {
     return row ? toListing(row) : null;
   }
 
+  async findById(id: string): Promise<Listing | null> {
+    const rows = await this.db.select().from(listings).where(eq(listings.id, id)).limit(1);
+    const row = rows[0];
+    return row ? toListing(row) : null;
+  }
+
+  async listActiveBySeller(seller: string): Promise<Listing[]> {
+    const rows = await this.db
+      .select()
+      .from(listings)
+      .where(and(eq(listings.seller, seller), eq(listings.status, 'ACTIVE')))
+      .orderBy(desc(listings.createdAt));
+    return rows.map(toListing);
+  }
+
+  async listActive(opts: { limit?: number; offset?: number } = {}): Promise<Listing[]> {
+    const rows = await this.db
+      .select()
+      .from(listings)
+      .where(eq(listings.status, 'ACTIVE'))
+      .orderBy(desc(listings.createdAt))
+      .limit(opts.limit ?? 50)
+      .offset(opts.offset ?? 0);
+    return rows.map(toListing);
+  }
+
   async create(listing: Listing): Promise<void> {
     await this.db.insert(listings).values({
       id: listing.id,

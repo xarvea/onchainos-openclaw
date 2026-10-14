@@ -85,6 +85,16 @@ export class InMemoryListingRepository implements ListingRepository {
   async findActiveByAsset(asset: string): Promise<Listing | null> {
     return [...this.store.values()].find((l) => l.asset === asset && l.status === 'ACTIVE') ?? null;
   }
+  async findById(id: string): Promise<Listing | null> {
+    return this.store.get(id) ?? null;
+  }
+  async listActiveBySeller(seller: string): Promise<Listing[]> {
+    return [...this.store.values()].filter((l) => l.seller === seller && l.status === 'ACTIVE');
+  }
+  async listActive(opts: { limit?: number; offset?: number } = {}): Promise<Listing[]> {
+    const all = [...this.store.values()].filter((l) => l.status === 'ACTIVE');
+    return all.slice(opts.offset ?? 0, (opts.offset ?? 0) + (opts.limit ?? 50));
+  }
   async create(listing: Listing): Promise<void> {
     this.store.set(listing.id, listing);
   }
