@@ -17,7 +17,7 @@ dan API publik Solana.
 
 ## Stack
 - **Chain:** Solana (devnet → mainnet-beta)
-- **NFT:** Metaplex Core · **Launch:** Candy Machine v3 · **Listing:** escrow (Auction House → custom Anchor)
+- **NFT:** Metaplex Core · **Launch:** Candy Machine v3 · **Listing:** non-custodial via Core Transfer Delegate (ADR-0005)
 - **Indexer:** Helius DAS + webhooks → Postgres (di balik interface `IndexerProvider`)
 - **Frontend:** Next.js 15 App Router + Tailwind v4 + `@micow/ui`
 - **Backend:** Node + Drizzle + Postgres + Redis; worker Inngest

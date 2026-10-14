@@ -83,19 +83,32 @@ failover ke QuickNode/Triton untuk produksi.
 
 ## Listing & Escrow On-Chain
 
-**A. Metaplex Auction House (open-source, standar)** — direkomendasikan MVP.
-- Program escrow: NFT ditahan di PDA, penjualan saat pembeli bayar.
-- Fee → marketplace + creator royalty + seller.
-- Support fixed-price, auction, offer/bid, update/cancel/execute sale.
-- Docs: https://developers.metaplex.com/auction-house
+> ⚠️ **Koreksi (2026-10-14):** bagian ini semula merekomendasikan **Auction House**.
+> Setelah verifikasi ulang di docs resmi Metaplex, rekomendasi itu **DIBATALKAN**:
+>
+> - **Auction House: DEPRECATED** ("no longer actively maintained") **dan tidak
+>   kompatibel dengan Metaplex Core.** AH dibangun di atas `mpl-token-metadata`
+>   (model SPL mint + Metadata PDA); Core memakai satu akun tanpa mint. Tidak ada
+>   adapter AH untuk Core.
+> - **Fixed Price Sale: DEPRECATED** dan hanya Token Metadata (print edition).
+> - **Core tidak punya program listing/sale/escrow bawaan.** Core menyediakan
+>   `Transfer`/`Burn`/`Update` + sistem **plugin**.
+>
+> Keputusan pengganti ada di **ADR-0005 (rev): non-custodial listing via Core
+> Transfer Delegate** — aset tetap di wallet seller, delegate memindahkan saat
+> terjual (authority one-time, revoke setelah transfer).
 
-**B. Program Anchor custom** — kontrol penuh, biaya lebih (audit). Untuk nanti.
+**Opsi listing untuk aset Core (2026-10):**
+1. **Non-custodial via Core Transfer Delegate plugin** (dipilih, ADR-0005 rev) —
+   aset tetap di wallet seller; delegate → transfer saat sale. Tanpa program baru.
+2. **Program escrow Anchor kustom** — kontrol penuh, biaya audit; ditunda.
+3. **Marketplace pihak ketiga (Tensor/Magic Eden)** sebagai backend Core —
+   ketergantungan pihak ketiga; tidak dipilih untuk MVP.
 
-**Pola umum:**
-1. Escrow-based (Auction House / custom) — NFT di PDA.
-2. Non-custodial orderbook (off-chain listing + signature) — gas lebih murah,
-   dipakai ME/Tensor.
-3. cNFT sale — butuh program khusus.
+**Catatan pola:**
+- Auction House (Token Metadata) & Fixed Price Sale: **jangan dipakai** (deprecated).
+- Non-custodial orderbook (off-chain listing + signature) — gas murah, dipakai ME/Tensor.
+- cNFT sale — butuh program khusus.
 
 ---
 

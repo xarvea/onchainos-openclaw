@@ -40,8 +40,8 @@ Bukan "clone" — melainkan produk dengan scope sempit yang dikerjakan dengan be
 | F2 | Browse koleksi & detail NFT | Helius DAS (`getAsset`, `getAssetsByGroup`) |
 | F3 | Profil user: NFT dimiliki, koleksi dibuat | DAS (`getAssetsByOwner`, `getAssetsByCreator`) |
 | F4 | Mint koleksi via Candy Machine v3 (Core assets) | `mpl-candy-machine` |
-| F5 | Listing fixed-price via escrow program | Auction House / program sendiri |
-| F6 | Buy / cancel listing | Escrow program |
+| F5 | Listing fixed-price non-custodial | Core Transfer Delegate (plugin); aset tetap di wallet seller |
+| F6 | Buy / cancel listing | Delegate transfer (buy) + revoke (cancel) |
 | F7 | Riwayat aktivitas (mint/list/sale/transfer) | Helius Webhooks + Enhanced TX |
 | F8 | Halaman koleksi SEO-friendly + OG image dinamis | Next.js Metadata API |
 
@@ -106,7 +106,7 @@ Bukan "clone" — melainkan produk dengan scope sempit yang dikerjakan dengan be
 |-------|---------|--------|
 | NFT standard | **Metaplex Core** | 1 akun/asset, mint ~80% lebih murah, plugins |
 | Launch/mint | **Candy Machine v3** | Guard (harga, allowlist, fase, limit) |
-| Listing/buy | **Escrow program** (Auction House atau Anchor custom) | Non-custodial standar terbuka |
+| Listing/buy | **Non-custodial** via **Core Transfer Delegate** (plugin) | Aset tetap di wallet seller; tanpa audit program; AH deprecated |
 | Program framework | **Anchor 0.31** (sudah terpasang) | Aman, IDL, testable |
 | Storage metadata | **Irys / Arweave** (via umi uploader) | Permanen, standar Metaplex |
 
@@ -278,7 +278,7 @@ Urutan implementasi Phase 3 (dependency-correct):
 
 - ❌ Tidak reverse-engineer, decompile, atau scrape sistem privat platform lain.
 - ❌ Tidak menyalin kode, desain, aset, atau API privat Magic Eden/Tensor/dll.
-- ✅ Hanya pakai **standar terbuka** (Metaplex Core/Candy Machine/Auction House),
+- ✅ Hanya pakai **standar terbuka** (Metaplex Core/Candy Machine, dan plugin bawaan Core),
   **API publik/resmi** (Helius DAS, Solana RPC), dan library open-source berlisensi.
 - ✅ Fitur "mirip secara konsep" (listing, mint, koleksi) boleh — karena itu
   standar industri publik, bukan milik satu platform.
@@ -289,11 +289,11 @@ Urutan implementasi Phase 3 (dependency-correct):
 
 | # | Pertanyaan | Status / Keputusan |
 |---|-----------|---------------------|
-| D1 | Escrow: pakai **Auction House (standar)** atau **program Anchor sendiri**? | ✅ **Auction House** (ADR-0005) — custom kemudian bila perlu |
+| D1 | Escrow: Auction House (standar) / program Anchor sendiri / non-custodial? | ✅ **Non-custodial via Core Transfer Delegate** (ADR-0005 rev) — AH deprecated & tak kompatibel Core; escrow kustom ditunda |
 | D2 | Wallet: cukup **Wallet Adapter** atau tambah **Privy** (email login)? | 🔶 Adapter dulu (ADR-0004); Privy ditunda ke M5 |
 | D3 | Network awal: devnet → mainnet-beta | ✅ **devnet** untuk M1–M5 |
 | D4 | Nama & identitas brand "micow" (logo, domain, dll) | ⬜ TBD |
-| D5 | Model fee platform (%) dan enforcement royalty | 🔶 mengikuti guard CM + Auction House (ADR-0005/0008); angka final TBD |
+| D5 | Model fee platform (%) dan enforcement royalty | 🔶 split deterministik di `ListingGateway` (ADR-0005 rev) + guard CM (ADR-0008); angka final TBD |
 
 Tambahan: jalur launch/mint diputuskan di **ADR-0008** (Candy Machine v3 + Core
 via Umi, tanpa program kustom).
@@ -305,7 +305,7 @@ via Umi, tanpa program kustom).
 - Metaplex Core: https://developers.metaplex.com/core
 - Candy Machine v3: https://developers.metaplex.com/candy-machine
 - DAS API: https://developers.metaplex.com/das-api
-- Auction House: https://developers.metaplex.com/auction-house
+- Core Transfer Delegate Plugin: https://developers.metaplex.com/smart-contracts/core/plugins/transfer-delegate
 - Helius DAS: https://docs.helius.dev/compression-and-das-api/digital-asset-standard-das-api
 - Helius Webhooks: https://docs.helius.dev/webhooks-and-websockets/webhooks
 - Solana Wallet Adapter: https://github.com/anza-xyz/wallet-adapter
