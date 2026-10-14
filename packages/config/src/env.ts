@@ -25,6 +25,11 @@ export const clientEnvSchema = z.object({
   NEXT_PUBLIC_MINT_LIMIT_PER_WALLET: z.coerce.number().int().min(0).default(2),
   NEXT_PUBLIC_ROYALTY_BPS: z.coerce.number().int().min(0).max(10_000).default(500),
   NEXT_PUBLIC_TREASURY_WALLET: z.string().optional(),
+
+  // Listing (non-custodial, ADR-0005 rev). The browser must know which delegate
+  // authority to grant the Transfer Delegate to, so this is public.
+  NEXT_PUBLIC_PLATFORM_DELEGATE: z.string().optional(),
+  NEXT_PUBLIC_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(200),
 });
 
 /** Variables that must NEVER reach the browser. */
@@ -46,6 +51,14 @@ export const serverEnvSchema = z.object({
   SOLANA_RPC_URL: z.string().url().optional(),
   IRYS_SECRET_KEY: z.string().min(1).optional(),
   IRYS_NODE_URL: z.string().url().optional(),
+
+  // Listing (non-custodial, ADR-0005 rev) — server-side tx building
+  /** Delegate authority address that holds Transfer Delegate rights on listings. */
+  PLATFORM_DELEGATE: z.string().optional(),
+  /** Platform fee in basis points (D5 — configurable). */
+  PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(200),
+  /** Treasury receiving the platform fee on a sale. */
+  PLATFORM_TREASURY: z.string().optional(),
 
   // Object storage (asset caching)
   S3_ENDPOINT: z.string().url().optional(),

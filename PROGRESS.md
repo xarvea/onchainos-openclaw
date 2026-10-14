@@ -110,6 +110,34 @@
 - [x] Verifikasi penuh: typecheck 10/10, lint 10/10, test 56 (application 6,
   solana 37, domain 4, database 3+4 skip, worker 6), build 14 route + worker dist
 
+### 2026-10-14 — M3 #2: listing non-custodial (ADR-0005 rev) + API routes
+- [x] **Revisi ADR-0005**: Auction House & Fixed Price Sale **DEPRECATED**
+  (diverifikasi live di developers.metaplex.com) dan tidak kompatibel Metaplex
+  Core (bound ke Token Metadata). Core **tidak** punya program sale bawaan →
+  keputusan: **non-custodial via Core `Transfer Delegate`** (escrowless). Aset
+  tetap di wallet seller; authority di-revoke setelah transfer (one-time).
+- [x] Domain `fees.ts` — `computeFeeSplit` (I5 deterministik, sisa → seller) + 12 test;
+  `ListingRepository` + `findById` / `listActiveBySeller` / `listActive`
+  (Drizzle + in-memory)
+- [x] Port `ListingGateway` (non-custodial) + use case `createListing` /
+  `cancelListing` / `buyListing` (I1/I4/I6) + 17 test
+- [x] `packages/solana/src/umi-listing.ts` — `UmiListingGateway`
+  (`addPlugin` / `revokePluginAuthority` / `transfer`) → transaksi **unsigned**
+  (base64) + 4 test
+- [x] Config: `PLATFORM_DELEGATE`, `PLATFORM_FEE_BPS`, `PLATFORM_TREASURY`,
+  `NEXT_PUBLIC_PLATFORM_DELEGATE` + schema validasi `createListingInput` /
+  `cancelListingInput` / `buyListingInput`
+- [x] Web `lib/listings.ts` — composition root (container + `UmiListingGateway`
+  + use case) dengan **safe-degrade** (503 bila `DATABASE_URL`/delegate kosong)
+- [x] API routes: `GET/POST /api/listings`, `GET /api/listings/[id]`,
+  `POST /api/listings/[id]/cancel`, `POST /api/listings/[id]/buy`. Semua mengembalikan
+  transaksi **unsigned** + pemetaan `InvariantViolation.code` (I1/I4/I5/I6) → HTTP
+  (403/404/409/422/503). Split fee di-serialisasi sebagai string (bigint-safe).
+- [x] Verifikasi penuh: typecheck 12/12, lint 12/12, test 67 (application 17,
+  solana 41, domain 12, database 3+4 skip, worker 6), build produksi bersih
+  (env bersih) — 4 route listing terdaftar
+
+
 ### 2026-10-14 — Phase 2: web read model (M1 selesai)
 - [x] `lib/read-model.ts` — akses read model server-side dengan **safe-degrade**:
   tanpa `DATABASE_URL` halaman render empty-state, bukan crash
