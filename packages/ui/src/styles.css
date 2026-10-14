@@ -1,0 +1,23 @@
+/* Base styles for @micow/ui components. Imported by apps/web after Tailwind. */
+.micow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+.micow-btn--sm { padding: 0.25rem 0.625rem; font-size: 0.875rem; }
+.micow-btn--md { padding: 0.5rem 1rem; font-size: 0.9375rem; }
+.micow-btn--lg { padding: 0.75rem 1.5rem; font-size: 1rem; }
+.micow-btn--default { background: #6d28d9; color: white; }
+.micow-btn--default:hover { background: #5b21b6; }
+.micow-btn--outline { border: 1px solid #3f3f46; background: transparent; color: inherit; }
+.micow-btn--ghost { background: transparent; color: inherit; }
+.micow-card {
+  border: 1px solid #27272a;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #0b0b0f;
+}

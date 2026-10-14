@@ -1,0 +1,32 @@
+{
+  "name": "@micow/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@micow/application": "workspace:*",
+    "@micow/config": "workspace:*",
+    "@micow/database": "workspace:*",
+    "@micow/domain": "workspace:*",
+    "@micow/observability": "workspace:*",
+    "@micow/solana": "workspace:*",
+    "inngest": "^3.29.0"
+  },
+  "devDependencies": {
+    "@micow/config-eslint": "workspace:*",
+    "@micow/config-ts": "workspace:*",
+    "@types/node": "^22.10.5",
+    "eslint": "^9.18.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

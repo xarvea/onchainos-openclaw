@@ -1,0 +1,10 @@
+{
+  "name": "@micow/config-ts",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "publishConfig": {
+    "access": "private"
+  },
+  "files": ["base.json", "nextjs.json", "node.json"]
+}

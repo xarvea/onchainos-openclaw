@@ -1,0 +1,7 @@
+{
+  "extends": "@micow/config-ts/node.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts"]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "micow",
+  "version": "0.0.0",
+  "private": true,
+  "description": "MICOW — NFT marketplace on Solana, built from open standards",
+  "packageManager": "pnpm@10.26.1",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,yaml,yml}\"",
+    "db:generate": "pnpm --filter @micow/database db:generate",
+    "db:migrate": "pnpm --filter @micow/database db:migrate",
+    "db:studio": "pnpm --filter @micow/database db:studio"
+  },
+  "devDependencies": {
+    "@micow/config-eslint": "workspace:*",
+    "@micow/config-ts": "workspace:*",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3"
+  }
+}

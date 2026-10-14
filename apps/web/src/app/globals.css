@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+@import '@micow/ui/styles.css';
+
+:root {
+  --micow-bg: #07070a;
+  --micow-fg: #ededf2;
+  --micow-accent: #6d28d9;
+  --micow-muted: #a1a1aa;
+}
+
+html,
+body {
+  background: var(--micow-bg);
+  color: var(--micow-fg);
+}
