@@ -28,7 +28,7 @@ kompatibilitas ekosistem lama.
 - Mendukung **Core assets** dan Token Metadata.
 - Komponen: Candy Machine account + Candy Guard + Config Lines + Hidden Settings.
 - SDK JS: `@metaplex-foundation/mpl-candy-machine` (6.x)
-- Storage: `umi-uploader-irys` / `umi-uploader-arweave`
+- Storage: IPFS via Pinata (REST) — default; `HttpStorage` untuk endpoint kustom
 - CLI: `mplx cm create|upload|mint`
 - Docs: https://developers.metaplex.com/candy-machine
 

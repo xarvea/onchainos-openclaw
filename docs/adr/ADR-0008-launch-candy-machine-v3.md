@@ -11,7 +11,7 @@ kustom, atau pakai program Metaplex standar (Candy Machine v3) lewat klien JS.
 - Gunakan **Candy Machine v3** (program Metaplex standar) — **bukan** program
   Anchor kustom untuk mint.
 - Klien memakai **Umi** + `@metaplex-foundation/mpl-core` +
-  `@metaplex-foundation/mpl-candy-machine` + plugin uploader (Irys/Arweave).
+  `@metaplex-foundation/mpl-candy-machine` + storage IPFS/Pinata (REST).
 - Koleksi memakai **Metaplex Core** (lihat ADR-0002), konsisten dengan read model.
 - Mint interaktif (tombol "Mint") di-sign di sisi klien; operasi admin
   (buat koleksi, buat CM, insert items) dijalankan dari server/script dengan

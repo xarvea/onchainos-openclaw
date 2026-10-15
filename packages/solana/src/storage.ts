@@ -6,13 +6,13 @@ import type { MetadataStorage } from '@micow/application';
  * - {@link InlineJsonStorage} embeds the JSON in a `data:` URI. No network, no
  *   secrets — ideal for devnet/local and for tests. NOT for production (wallets
  *   and explorers truncate huge data URIs and it wastes on-chain space).
- * - {@link HttpStorage} POSTs to a configurable upload endpoint (e.g. an Irys
- *   bundler, ArDrive, or your own pinning service) and expects `{ uri }` back.
- *   This keeps the heavy `@irys/upload` SDK out of the core package and lets the
- *   deployment choose its provider; wire the real Irys SDK in a thin adapter if
- *   you need funding/settlement logic.
+ * - {@link HttpStorage} POSTs to a configurable upload endpoint (e.g. your own
+ *   pinning service) and expects `{ uri }` back. Provider-agnostic escape hatch.
+ * - {@link PinataStorage} pins images + metadata JSON to IPFS via Pinata's REST
+ *   API (no SDK dependency) and returns gateway-resolved `https://…/ipfs/<cid>`
+ *   URIs. This is the default durable provider for MICOW.
  *
- * Both are framework-free and satisfy the application-layer `MetadataStorage`
+ * All are framework-free and satisfy the application-layer `MetadataStorage`
  * port, so the launch use case never imports a storage SDK directly.
  */
 
@@ -45,7 +45,7 @@ export class InlineJsonStorage implements MetadataStorage {
     // Without a real host we cannot mint a durable image URI. Returning a bogus
     // one would silently produce broken assets, so we fail loudly instead.
     throw new Error(
-      'InlineJsonStorage.putBytes: images require a real host — use HttpStorage or IrysStorage in production',
+      'InlineJsonStorage.putBytes: images require a real host — use PinataStorage or HttpStorage in production',
     );
   }
 }
@@ -94,5 +94,100 @@ export class HttpStorage implements MetadataStorage {
 
   async putBytes(data: Uint8Array, opts: { contentType: string }): Promise<{ uri: string }> {
     return this.post(data as RequestInit['body'], opts.contentType);
+  }
+}
+
+export interface PinataStorageOptions {
+  /** Pinata JWT (Bearer). Server-only — never expose to the browser. */
+  jwt: string;
+  /** Public IPFS gateway base used to build read URLs. Default: Pinata gateway. */
+  gateway?: string;
+  /**
+   * Optional folder/name prefix applied to pin names. Purely cosmetic (shows in
+   * the Pinata dashboard); it does NOT affect the CID or the returned URI.
+   */
+  namePrefix?: string;
+}
+
+/**
+ * Durable metadata storage on IPFS via Pinata's REST API.
+ *
+ * Why REST + `fetch` instead of the Pinata SDK: zero new dependencies, works in
+ * Node and edge runtimes, and mirrors {@link HttpStorage} so it is trivial to
+ * mock in tests. Images (`pinFileToIPFS`, multipart) and metadata JSON
+ * (`pinJSONToIPFS`) are pinned, and the returned URI is resolved through a
+ * public gateway so wallets/explorers can fetch it directly.
+ *
+ * Contract notes:
+ * - `putBytes` returns an image URI (e.g. `https://gateway.pinata.cloud/ipfs/<cid>`).
+ * - `putJson` returns a metadata URI; callers already embed the image URI from
+ *   `putBytes` inside the JSON before pinning it.
+ * - Failures throw (never a bogus URI) — a launch that persists a broken URI
+ *   would mint un-metadata'd assets on-chain.
+ */
+export class PinataStorage implements MetadataStorage {
+  private readonly gateway: string;
+  private readonly namePrefix: string;
+
+  constructor(private readonly opts: PinataStorageOptions) {
+    if (!opts.jwt) throw new Error('PinataStorage: jwt is required');
+    // Normalise: strip a trailing slash so joins are predictable.
+    this.gateway = (opts.gateway ?? 'https://gateway.pinata.cloud').replace(/\/+$/, '');
+    this.namePrefix = opts.namePrefix ? `${opts.namePrefix}-` : '';
+  }
+
+  /** Build the browser-facing URI for a CID through the configured gateway. */
+  private uriFor(cid: string): string {
+    return `${this.gateway}/ipfs/${cid}`;
+  }
+
+  private async readCid(res: Response, op: string): Promise<string> {
+    if (!res.ok) {
+      // Surface the status only — never echo the response body (could be large
+      // or contain hints). The JWT is never logged.
+      throw new Error(`PinataStorage.${op} failed: HTTP ${res.status}`);
+    }
+    const json = (await res.json()) as { IpfsHash?: string };
+    if (!json.IpfsHash) throw new Error(`PinataStorage.${op}: response missing IpfsHash`);
+    return json.IpfsHash;
+  }
+
+  async putJson(json: Record<string, unknown>): Promise<{ uri: string }> {
+    const res = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${this.opts.jwt}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        pinataContent: json,
+        pinataMetadata: { name: `${this.namePrefix}metadata.json` },
+      }),
+    });
+    const cid = await this.readCid(res, 'putJson');
+    return { uri: this.uriFor(cid) };
+  }
+
+  async putBytes(
+    data: Uint8Array,
+    opts: { contentType: string; fileName?: string },
+  ): Promise<{ uri: string }> {
+    const form = new FormData();
+    // Copy into a fresh Uint8Array so the Blob owns its bytes (some runtimes
+    // retain a view into a larger buffer otherwise).
+    const bytes = new Uint8Array(data);
+    form.append('file', new Blob([bytes], { type: opts.contentType }), opts.fileName ?? 'file');
+    form.append(
+      'pinataMetadata',
+      JSON.stringify({ name: `${this.namePrefix}${opts.fileName ?? 'file'}` }),
+    );
+
+    const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${this.opts.jwt}` },
+      body: form,
+    });
+    const cid = await this.readCid(res, 'putBytes');
+    return { uri: this.uriFor(cid) };
   }
 }

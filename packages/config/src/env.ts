@@ -49,8 +49,18 @@ export const serverEnvSchema = z.object({
   // Launch / mint (Candy Machine v3 + Core) — server-only admin ops
   SOLANA_KEYPAIR_PATH: z.string().min(1).optional(),
   SOLANA_RPC_URL: z.string().url().optional(),
-  IRYS_SECRET_KEY: z.string().min(1).optional(),
-  IRYS_NODE_URL: z.string().url().optional(),
+
+  // Asset metadata storage (SERVER-ONLY). "inline" = data-URI (dev/test only),
+  // "http" = POST to ASSET_STORAGE_ENDPOINT, "pinata" = IPFS via Pinata.
+  ASSET_STORAGE_DRIVER: z.enum(['inline', 'http', 'pinata']).default('inline'),
+  /** Pinata JWT (Bearer). Server-only — required when driver = "pinata". */
+  PINATA_JWT: z.string().min(1).optional(),
+  /** Public IPFS gateway base for read URIs. Default: Pinata gateway. */
+  IPFS_GATEWAY: z.string().url().optional(),
+  /** Endpoint for driver = "http" (returns `{ uri }`). */
+  ASSET_STORAGE_ENDPOINT: z.string().url().optional(),
+  /** Optional bearer token for driver = "http". */
+  ASSET_STORAGE_TOKEN: z.string().optional(),
 
   // Listing (non-custodial, ADR-0005 rev) — server-side tx building
   /** Delegate authority address that holds Transfer Delegate rights on listings. */

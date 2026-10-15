@@ -110,6 +110,29 @@
 - [x] Verifikasi penuh: typecheck 10/10, lint 10/10, test 56 (application 6,
   solana 37, domain 4, database 3+4 skip, worker 6), build 14 route + worker dist
 
+### 2026-10-15 — M3: storage metadata → IPFS/Pinata (ganti Irys)
+- [x] **Keputusan: buang Irys.** `@irys/cli` v0.0.19 rusak (prompt inquirer mati,
+  `--no-confirmation` tak ngefek → fund/upload tak pernah jalan). Tidak ada
+  dependency `@irys/*` di repo (terbukti), jadi tak ada yang perlu di-uninstall.
+- [x] **Provider baru: IPFS via Pinata (REST).** `PinataStorage`
+  (`packages/solana/src/storage.ts`) — `pinFileToIPFS` (multipart, bytes) +
+  `pinJSONToIPFS` (JSON) via `fetch`, **tanpa SDK**. URI baca =
+  `https://<gateway>/ipfs/<cid>`. Fail-loud (tak pernah kembalikan URI palsu);
+  error tak membocorkan body/JWT.
+- [x] **Env dinetralkan**: `IRYS_SECRET_KEY`/`IRYS_NODE_URL` →
+  `ASSET_STORAGE_DRIVER` (`inline|http|pinata`), `PINATA_JWT`, `IPFS_GATEWAY`,
+  `ASSET_STORAGE_ENDPOINT`, `ASSET_STORAGE_TOKEN`. `.env` + `.env.example` +
+  `docs/operations/env.md` diperbarui; `.gitignore` diperketat (`.env.bak*`).
+- [x] **Doc dibersihkan** (tak ada lagi sebutan Irys): `env.md`, `BLUEPRINT`,
+  `research-solana-nft-stack`, `ADR-0008`, `probe-launch-e2e.ts`, `ports.ts`.
+- [x] Test: `storage.test.ts` +5 tes Pinata (konstruktor, pin JSON, pin bytes
+  multipart + normalisasi gateway, non-ok, missing `IpfsHash`).
+- [x] Verifikasi penuh: typecheck 10/10, lint 10/10, test **85** (domain 12,
+  application 17, solana 47, database 3+4 skip, worker 6).
+- [ ] **Belum**: wire `ASSET_STORAGE_DRIVER` → `PinataStorage` di script launch
+  (composition root), dan `NEXT_PUBLIC_ASSET_BASE_URI` di `.env` =
+  `https://gateway.pinata.cloud/ipfs` (perlu `PINATA_JWT` dari user).
+
 ### 2026-10-15 — M3 #2 lanjutan: listing e2e devnet + perbaikan signer (createNoopSigner)
 - [x] `scripts/probe-listing-e2e.ts` + script `pnpm --filter @micow/solana listing:e2e` —
   jalur list→buy end-to-end via use case + `UmiListingGateway` ASLI terhadap devnet
@@ -234,3 +257,7 @@ Lingkungan: Node 22.23.1 (nvm) · pnpm 10.26.1 · Next.js 15.5.27 · Turbo 2.11.
 - D1 escrow (Auction House vs custom Anchor) — lihat BLUEPRINT §12
 - D2 Privy vs Wallet Adapter only
 - D5 model fee & enforcement royalty
+
+## Keputusan diambil
+- **Storage metadata: IPFS via Pinata (REST)** — menggantikan Irys (CLI rusak).
+  Driver dipilih via `ASSET_STORAGE_DRIVER`. Lihat task log 2026-10-15 M3.

@@ -108,7 +108,7 @@ Bukan "clone" — melainkan produk dengan scope sempit yang dikerjakan dengan be
 | Launch/mint | **Candy Machine v3** | Guard (harga, allowlist, fase, limit) |
 | Listing/buy | **Non-custodial** via **Core Transfer Delegate** (plugin) | Aset tetap di wallet seller; tanpa audit program; AH deprecated |
 | Program framework | **Anchor 0.31** (sudah terpasang) | Aman, IDL, testable |
-| Storage metadata | **Irys / Arweave** (via umi uploader) | Permanen, standar Metaplex |
+| Storage metadata | **IPFS / Pinata** (REST) | Permanen, tanpa SDK berat, gateway publik |
 
 ### Backend & Data
 | Layer | Pilihan | Alasan |

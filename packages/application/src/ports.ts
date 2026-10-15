@@ -83,7 +83,7 @@ export interface ListingGateway {
 }
 
 /**
- * Off-chain metadata storage (Arweave via Irys, or any other content-addressed
+ * Off-chain metadata storage (IPFS, Arweave, or any other content-addressed
  * host). Implemented in infra. The application layer never talks to a storage
  * SDK directly — it only asks for a URI, which is then embedded in the on-chain
  * collection/asset metadata.

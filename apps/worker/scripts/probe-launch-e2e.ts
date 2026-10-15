@@ -9,8 +9,8 @@
  *
  * Storage is a LOCAL HTTP server (http://127.0.0.1:PORT/<hash>) so the metadata
  * URIs are genuinely resolvable http(s) URLs — which the minter's validation
- * (rightly) requires — without needing an Arweave/Irys secret. This proves the
- * *wiring*; swap in HttpStorage/IrysStorage for a real, durable drop.
+ * (rightly) requires — without needing an IPFS pinning secret. This proves the
+ * *wiring*; swap in PinataStorage for a real, durable drop.
  *
  * Run (spends devnet SOL, hits the network — manual only, not CI):
  *   pnpm --filter @micow/worker launch:e2e

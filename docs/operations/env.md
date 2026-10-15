@@ -26,9 +26,12 @@ Sumber skema tervalidasi: `packages/config/src/env.ts` (zod).
 | **Launch / mint (CM v3 + Core)** | | | |
 | `SOLANA_KEYPAIR_PATH` | **server** | tidak* | Path keypair JSON admin (creator CM). Default `~/.config/solana/devnet.json` |
 | `SOLANA_RPC_URL` | **server** | tidak | RPC untuk script launch; fallback ke `NEXT_PUBLIC_SOLANA_RPC_URL` |
-| `NEXT_PUBLIC_ASSET_BASE_URI` | client | tidak* | Base URI metadata/aset (gateway Irys/Arweave/CDN) |
-| `IRYS_SECRET_KEY` | **server** | tidak* | Private key / path keypair uploader Irys (base58 atau JSON) |
-| `IRYS_NODE_URL` | **server** | tidak | Node Irys (devnet/mainnet) |
+| `NEXT_PUBLIC_ASSET_BASE_URI` | client | tidak* | Base URI metadata/aset (gateway IPFS/CDN) |
+| `ASSET_STORAGE_DRIVER` | **server** | tidak | `inline` \| `http` \| `pinata` (default `inline`) |
+| `PINATA_JWT` | **server** | tidak* | Pinata JWT (Bearer) — wajib bila driver `pinata` |
+| `IPFS_GATEWAY` | **server** | tidak | Gateway IPFS untuk URI baca (default `https://gateway.pinata.cloud`) |
+| `ASSET_STORAGE_ENDPOINT` | **server** | tidak | Endpoint upload (→ `{ uri }`) — hanya driver `http` |
+| `ASSET_STORAGE_TOKEN` | **server** | tidak | Bearer token opsional — hanya driver `http` |
 | `NEXT_PUBLIC_MINT_PRICE_SOL` | client | tidak | Harga mint publik (SOL). `0` = gratis |
 | `NEXT_PUBLIC_MINT_LIMIT_PER_WALLET` | client | tidak | Batas mint per wallet (guard `mintLimit`) |
 | `NEXT_PUBLIC_ROYALTY_BPS` | client | tidak | Royalti/fee platform dalam bps (500 = 5%) |
@@ -41,9 +44,10 @@ Sumber skema tervalidasi: `packages/config/src/env.ts` (zod).
 \* Wajib untuk fitur yang memakai Helius (browse via DAS, webhook). Untuk M1
 tanpa DAS, boleh kosong.
 
-\* **Launch/mint**: `SOLANA_KEYPAIR_PATH`, `IRYS_SECRET_KEY`, `NEXT_PUBLIC_ASSET_BASE_URI`,
-dan `NEXT_PUBLIC_TREASURY_WALLET` wajib **hanya** untuk membuat/mint koleksi
-(`pnpm --filter @micow/solana launch:*`). Browse/portfolio tidak membutuhkannya.
+\* **Launch/mint**: `SOLANA_KEYPAIR_PATH`, `ASSET_STORAGE_DRIVER=pinata` (+ `PINATA_JWT`),
+`NEXT_PUBLIC_ASSET_BASE_URI`, dan `NEXT_PUBLIC_TREASURY_WALLET` wajib **hanya** untuk
+membuat/mint koleksi (`pnpm --filter @micow/solana launch:*`). Browse/portfolio
+tidak membutuhkannya.
 
 ## Cek cepat env launch
 
@@ -51,14 +55,36 @@ dan `NEXT_PUBLIC_TREASURY_WALLET` wajib **hanya** untuk membuat/mint koleksi
 # 1. Pastikan keypair admin ada + ada saldo devnet.
 solana address -k "$SOLANA_KEYPAIR_PATH"
 solana balance --url "${SOLANA_RPC_URL:-https://api.devnet.solana.com}"
-
-# 2. (Opsional) isi saldo Irys devnet untuk upload metadata.
-curl -X POST "https://faucet.irys.xyz"   # lihat docs.faucet untuk body
 ```
 
-> **PENTING**: `IRYS_SECRET_KEY` dan `SOLANA_KEYPAIR_PATH` adalah secret server.
-> Jangan pernah taruh di variabel `NEXT_PUBLIC_*`. Mint interaktif di-sign wallet
-> pengguna di browser; admin key hanya untuk operasi server/script.
+## Storage metadata (IPFS / Pinata)
+
+Metadata + gambar di-upload oleh `MetadataStorage` (port di `@micow/application`,
+implementasi di `@micow/solana/src/storage.ts`). Pilih provider via
+`ASSET_STORAGE_DRIVER`:
+
+| Driver | Kapan dipakai |
+|--------|---------------|
+| `inline` | Dev/test cepat — URI `data:` (tidak durable, besar on-chain). Default |
+| `http` | Kamu punya endpoint upload sendiri (POST → `{ uri }`) |
+| `pinata` | Produksi — pin gambar + JSON ke IPFS via REST Pinata |
+
+**Setup Pinata (driver `pinata`):**
+
+```bash
+# 1. Buat JWT di https://app.pinata.cloud/developers/api-keys
+#    scope: pinFileToIPFS + pinJSONToIPFS (server-side only).
+# 2. Set di .env (JANGAN di NEXT_PUBLIC_*).
+echo 'ASSET_STORAGE_DRIVER=pinata' >> .env
+echo 'PINATA_JWT=<jwt>' >> .env
+echo 'IPFS_GATEWAY=https://gateway.pinata.cloud' >> .env
+# 3. URI baca yang dipakai UI (prefix gateway):
+echo 'NEXT_PUBLIC_ASSET_BASE_URI=https://gateway.pinata.cloud/ipfs' >> .env
+```
+
+> **PENTING**: `PINATA_JWT`, `ASSET_STORAGE_TOKEN`, dan `SOLANA_KEYPAIR_PATH` adalah
+> secret server. Jangan pernah taruh di variabel `NEXT_PUBLIC_*`. Mint interaktif
+> di-sign wallet pengguna di browser; admin key hanya untuk operasi server/script.
 
 ## Alur
 
