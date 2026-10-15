@@ -7,20 +7,28 @@
  *   off-chain metadata (storage)  →  Core collection + Candy Machine (minter)
  *                                 →  read model (in-memory container)
  *
- * Storage is a LOCAL HTTP server (http://127.0.0.1:PORT/<hash>) so the metadata
- * URIs are genuinely resolvable http(s) URLs — which the minter's validation
- * (rightly) requires — without needing an IPFS pinning secret. This proves the
- * *wiring*; swap in PinataStorage for a real, durable drop.
+ * Storage: by default a LOCAL HTTP server (http://127.0.0.1:PORT/<hash>) so the
+ * metadata URIs are genuinely resolvable http(s) URLs — which the minter's
+ * validation (rightly) requires — without needing an IPFS pinning secret. Set
+ * `ASSET_STORAGE_DRIVER=pinata` (+ `PINATA_JWT`) to pin to IPFS instead; the
+ * probe then uses the SAME `createMetadataStorage` factory the production
+ * composition root uses, exercising the real driver.
  *
  * Run (spends devnet SOL, hits the network — manual only, not CI):
  *   pnpm --filter @micow/worker launch:e2e
+ *   ASSET_STORAGE_DRIVER=pinata PINATA_JWT=… pnpm --filter @micow/worker launch:e2e
  */
 import { createServer } from 'node:http';
 
 import { launchCollection, type MetadataStorage } from '@micow/application';
 import { createInMemoryContainer } from '@micow/database';
 import { asPublicKey } from '@micow/domain';
-import { UmiCollectionMinter, createUmiClient } from '@micow/solana';
+import {
+  createMetadataStorage,
+  UmiCollectionMinter,
+  createUmiClient,
+  type StorageDriver,
+} from '@micow/solana';
 
 const ENDPOINT = process.env.SOLANA_RPC_URL ?? 'https://api.devnet.solana.com';
 const KEYPAIR = process.env.SOLANA_KEYPAIR ?? `${process.env.HOME}/.config/solana/devnet.json`;
@@ -80,9 +88,25 @@ async function main() {
   console.log('endpoint :', umi.rpc.getEndpoint());
   console.log('identity :', umi.identity.publicKey);
 
-  const storage = new LocalHttpStorage();
-  await storage.listen();
-  console.log('storage  :', storage.base);
+  // Choose the storage driver the same way the production composition root will.
+  // Default stays the offline local HTTP server so the probe runs without secrets.
+  const driver = (process.env.ASSET_STORAGE_DRIVER ?? 'inline') as StorageDriver;
+  let storage: MetadataStorage;
+  if (driver === 'pinata') {
+    storage = createMetadataStorage({
+      driver: 'pinata',
+      pinataJwt: process.env.PINATA_JWT,
+      gateway: process.env.IPFS_GATEWAY,
+      namePrefix: 'micow-e2e',
+    });
+    console.log('storage  : pinata (IPFS)');
+  } else {
+    // Local HTTP server: real, resolvable http URLs without a pinning secret.
+    const local = new LocalHttpStorage();
+    await local.listen();
+    storage = local;
+    console.log('storage  :', local.base);
+  }
 
   const deps = {
     storage,

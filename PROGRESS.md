@@ -127,11 +127,19 @@
   `research-solana-nft-stack`, `ADR-0008`, `probe-launch-e2e.ts`, `ports.ts`.
 - [x] Test: `storage.test.ts` +5 tes Pinata (konstruktor, pin JSON, pin bytes
   multipart + normalisasi gateway, non-ok, missing `IpfsHash`).
-- [x] Verifikasi penuh: typecheck 10/10, lint 10/10, test **85** (domain 12,
-  application 17, solana 47, database 3+4 skip, worker 6).
-- [ ] **Belum**: wire `ASSET_STORAGE_DRIVER` → `PinataStorage` di script launch
-  (composition root), dan `NEXT_PUBLIC_ASSET_BASE_URI` di `.env` =
-  `https://gateway.pinata.cloud/ipfs` (perlu `PINATA_JWT` dari user).
+- [x] **Factory `createMetadataStorage(cfg)`** (composition root): pilih driver
+  `inline|http|pinata` dari `ASSET_STORAGE_DRIVER`; **fail-loud** bila kredensial
+  kurang (tidak diam-diam turun ke `inline` yang menghasilkan URI `data:` tak
+  durable). +3 unit test.
+- [x] **Probe launch:e2e di-wire** ke factory: default server HTTP lokal (offline,
+  tanpa secret), atau IPFS bila `ASSET_STORAGE_DRIVER=pinata` + `PINATA_JWT`.
+- [x] Verifikasi penuh: typecheck 10/10, lint 10/10, test **88** (domain 12,
+  application 17, solana 50, database 3+4 skip, worker 6).
+- [ ] **Belum**: isi `PINATA_JWT` di `.env` (buat di
+  https://app.pinata.cloud/developers/api-keys, scope pinFileToIPFS +
+  pinJSONToIPFS) → lalu `ASSET_STORAGE_DRIVER=pinata` siap dipakai.
+- [ ] **Belum**: composition root untuk web/worker runtime (bukan cuma probe) —
+  saat route mint publik ditambahkan.
 
 ### 2026-10-15 — M3 #2 lanjutan: listing e2e devnet + perbaikan signer (createNoopSigner)
 - [x] `scripts/probe-listing-e2e.ts` + script `pnpm --filter @micow/solana listing:e2e` —

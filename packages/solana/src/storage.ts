@@ -191,3 +191,56 @@ export class PinataStorage implements MetadataStorage {
     return { uri: this.uriFor(cid) };
   }
 }
+
+/**
+ * Storage driver selector — the composition-root seam for metadata storage.
+ *
+ * `inline` (default) embeds JSON as a `data:` URI and has no durable bytes host
+ * (dev/test only). `http` posts to a caller-provided endpoint. `pinata` pins to
+ * IPFS. Keeping the selection here means scripts/DI roots never `switch` on the
+ * env var themselves, and the application layer stays ignorant of providers.
+ */
+export type StorageDriver = 'inline' | 'http' | 'pinata';
+
+export interface StorageConfig {
+  driver: StorageDriver;
+  /** driver=http */
+  endpoint?: string;
+  token?: string;
+  /** driver=pinata */
+  pinataJwt?: string;
+  gateway?: string;
+  /** Optional pin-name prefix (pinata). */
+  namePrefix?: string;
+}
+
+/**
+ * Build the {@link MetadataStorage} for the configured driver, failing loudly on
+ * a missing required credential rather than silently degrading to `inline`
+ * (which would mint assets with non-durable `data:` URIs).
+ */
+export function createMetadataStorage(cfg: StorageConfig): MetadataStorage {
+  switch (cfg.driver) {
+    case 'inline':
+      return new InlineJsonStorage();
+    case 'http':
+      if (!cfg.endpoint) {
+        throw new Error('createMetadataStorage: driver "http" requires endpoint');
+      }
+      return new HttpStorage({ endpoint: cfg.endpoint, token: cfg.token });
+    case 'pinata':
+      if (!cfg.pinataJwt) {
+        throw new Error('createMetadataStorage: driver "pinata" requires pinataJwt (PINATA_JWT)');
+      }
+      return new PinataStorage({
+        jwt: cfg.pinataJwt,
+        gateway: cfg.gateway,
+        namePrefix: cfg.namePrefix,
+      });
+    default: {
+      // Exhaustiveness check: an unknown driver is a config error, not a crash.
+      const never: never = cfg.driver;
+      throw new Error(`createMetadataStorage: unknown driver ${String(never)}`);
+    }
+  }
+}

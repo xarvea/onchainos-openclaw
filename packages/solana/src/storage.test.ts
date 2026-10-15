@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { HttpStorage, InlineJsonStorage, PinataStorage } from './storage';
+import { createMetadataStorage, HttpStorage, InlineJsonStorage, PinataStorage } from './storage';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -128,5 +128,27 @@ describe('PinataStorage', () => {
     );
     const storage = new PinataStorage({ jwt: 'jwt-token' });
     await expect(storage.putJson({})).rejects.toThrow(/missing IpfsHash/);
+  });
+});
+
+describe('createMetadataStorage', () => {
+  it('builds an InlineJsonStorage for driver=inline', () => {
+    const s = createMetadataStorage({ driver: 'inline' });
+    expect(s).toBeInstanceOf(InlineJsonStorage);
+  });
+
+  it('builds an HttpStorage for driver=http (requires endpoint)', () => {
+    expect(createMetadataStorage({ driver: 'http', endpoint: 'https://up.test/x' })).toBeInstanceOf(
+      HttpStorage,
+    );
+    expect(() => createMetadataStorage({ driver: 'http' })).toThrow(/requires endpoint/);
+  });
+
+  it('builds a PinataStorage for driver=pinata (requires pinataJwt)', () => {
+    expect(createMetadataStorage({ driver: 'pinata', pinataJwt: 'jwt' })).toBeInstanceOf(
+      PinataStorage,
+    );
+    // A missing JWT must fail loudly, not silently degrade to inline.
+    expect(() => createMetadataStorage({ driver: 'pinata' })).toThrow(/requires pinataJwt/);
   });
 });
