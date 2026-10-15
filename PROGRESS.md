@@ -208,16 +208,24 @@
 3. ✅ Helius webhooks → `activities` (feed aktivitas realtime) + UI `/activity`.
 4. ✅ OG image dinamis + sitemap + robots (SEO).
 
-## Verifikasi (2026-10-14)
+## Verifikasi (2026-10-15)
 
 | Pipeline | Hasil | Bukti |
 |----------|-------|-------|
-| `pnpm lint` | ✅ 10/10 tasks (0 warning) | turbo tasks successful |
-| `pnpm typecheck` | ✅ 10/10 tasks | tsc --noEmit per paket |
-| `pnpm test` | ✅ 6/6 tasks (32 tes unit + 4 DB-integration bila `DATABASE_URL` ada) | vitest |
-| `pnpm build` | ✅ 2/2 tasks | Next.js compiled, **14 route** di-generate |
-| Runtime | ✅ | `/api/health` → `{ok:true}`; `/`,`/explore`,`/activity`,`/portfolio` → 200; `/robots.txt`,`/sitemap.xml` valid; OG `image/png` 1200×630 |
-| Webhook | ✅ | `POST /api/webhooks/helius`: 401 tanpa secret, `accepted:0` payload kosong, `recorded:true` sale; DB dedup 1 baris saat replay |
+| `pnpm -r typecheck` | ✅ 10/10 tasks | tsc --noEmit per paket |
+| `pnpm -r lint` | ✅ 10/10 tasks (0 warning) | eslint per paket + `next lint` |
+| `pnpm -r test` | ✅ 6/6 tasks — application 17, solana 42, database 3 (+4 skip), worker 6 (total **68**) | vitest |
+| `pnpm build` | ✅ 2/2 tasks | Next.js compiled, **18 route** di-generate + worker dist |
+| `listing:e2e` (devnet) | ✅ `OK` | LIST→BUY via use case asli: owner tetap seller + delegate authority benar; buy → owner = buyer + delegate authority reset |
+
+### Verifikasi sebelumnya (2026-10-14)
+| Pipeline | Hasil |
+|----------|-------|
+| lint / typecheck | ✅ 10/10 |
+| test | ✅ 6/6 tasks (32 unit + 4 DB-integration bila `DATABASE_URL` ada) |
+| build | ✅ 2/2 tasks, 14 route |
+| Runtime | ✅ `/api/health` `{ok:true}`; core pages 200; robots/sitemap valid; OG 1200×630 |
+| Webhook | ✅ 401 tanpa secret; `recorded:true` sale; DB dedup saat replay |
 
 Lingkungan: Node 22.23.1 (nvm) · pnpm 10.26.1 · Next.js 15.5.27 · Turbo 2.11.
 
