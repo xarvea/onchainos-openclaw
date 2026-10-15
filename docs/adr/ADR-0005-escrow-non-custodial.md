@@ -62,6 +62,41 @@ Alur:
   terjual, delegate tak bisa dipakai lagi (aman).
 - Termasuk plugin *Owner Managed*.
 
+### Temuan signer — diverifikasi on-chain (devnet, 2026-10-15)
+
+Dijalankan via `pnpm --filter @micow/solana listing:e2e`
+(`scripts/probe-listing-e2e.ts`) memakai use case + `UmiListingGateway` asli
+terhadap devnet. Empat temuan yang **tidak bisa dilihat unit test offline**:
+
+1. **Authority harus di-mark sebagai signer (`createNoopSigner`).** Core
+   me-resolve akun `authority` dari sebuah Umi `Signer`; hanya `Signer` yang
+   di-emit dengan `isSigner = true`. Bila `authority` diberi `PublicKey` biasa
+   (atau dihilangkan), tx yang dihasilkan **mewajibkan NOL signer**
+   (`numRequiredSignatures = 0`) — wallet tak akan pernah bisa submit, dan unit
+   test lama tetap lolos karena tx kosong itu "trivially unsigned". Perbaikan:
+   bungkus tiap authority dengan `createNoopSigner(pk)` (backend tidak
+   menandatangani, hanya *menandai* alamat sebagai required signer). Signer yang
+   diwajibkan: **create/cancel → seller** (owner aset), **buy → delegate**.
+
+2. **Buy TIDAK mewajibkan buyer menandatangani.** Pada `transfer`, delegate-lah
+   yang mengotorisasi; pemilik baru (buyer) tidak perlu tanda tangan. Di probe,
+   `buyTx` mewajibkan delegate (muncul dua kali: fee payer + authority).
+
+3. **Delegate TIDAK dihapus setelah transfer — authority-nya di-*reset* ke
+   Owner.** Setelah buy, plugin `TransferDelegate` **masih ada** pada aset, tapi
+   `authority` kembali ke `{ type: 'Owner' }` (bukan `Address: delegate`).
+   Konsekuensi: listing ulang oleh pemilik baru harus **me-delegate ulang**
+   (bukan sekadar mengandalkan plugin lama). Ini nuansa penting: "dicabut
+   otomatis" ≠ "plugin dihapus".
+
+4. **`buildBuyTx` saat ini belum menyertakan instruksi pembayaran.** Parameter
+   `priceLamports` diterima tetapi tidak dipakai membangun transfer SOL — jadi
+   tx buy hanya memindahkan aset. Penegakan pembayaran masih off-chain/read
+   model (invariant I5) dan **belum** berupa escrow on-chain. Ini gap yang
+   disadari (lihat Trade-off) dan menjadi alasan kuat untuk port Anchor kustom
+   bila butuh pembayaran atomic (NFT+SOL dalam satu tx).
+
+
 ## Alternatif yang dipertimbangkan
 
 | Opsi | Kenapa tidak dipilih (sekarang) |

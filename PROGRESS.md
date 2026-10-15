@@ -110,6 +110,34 @@
 - [x] Verifikasi penuh: typecheck 10/10, lint 10/10, test 56 (application 6,
   solana 37, domain 4, database 3+4 skip, worker 6), build 14 route + worker dist
 
+### 2026-10-15 — M3 #2 lanjutan: listing e2e devnet + perbaikan signer (createNoopSigner)
+- [x] `scripts/probe-listing-e2e.ts` + script `pnpm --filter @micow/solana listing:e2e` —
+  jalur list→buy end-to-end via use case + `UmiListingGateway` ASLI terhadap devnet
+  (funder/seller/delegate/buyer keypair terpisah, asset Core throwaway)
+- [x] **Temuan #1 — bug signer (tak terlihat unit test):** authority Core harus
+  berupa Umi `Signer`; `PublicKey` biasa menghasilkan tx dgn
+  `numRequiredSignatures = 0` (wallet tak bisa submit). Fix: `createNoopSigner`
+  pada authority di `addPlugin`/`revokePluginAuthority`/`transfer`
+- [x] **Temuan #2 — delegate TIDAK dihapus setelah buy:** plugin `TransferDelegate`
+  tetap ada, `authority` di-reset ke `{ type: 'Owner' }` ("dicabut" ≠ "dihapus")
+- [x] **Temuan #3 — buyer tak perlu sign** (delegate yang otorisasi transfer);
+  `buyTx` mewajibkan delegate (feepayer + authority)
+- [x] **Temuan #4 (gap disadari):** `buildBuyTx` belum menyertakan instruksi
+  pembayaran (`priceLamports` tak dipakai di tx) — enforced off-chain; alasan
+  kuat port Anchor kustom utk pembayaran atomic
+- [x] Probe diperbaiki: plugin dibaca via `deriveAssetPlugins` (`asset.plugins`
+  tidak ada di `AssetV1` — cek lama selalu `n/a`); ditambah assertion keras
+  (owner tetap seller + delegate authority benar saat LIST; owner = buyer +
+  delegate ter-reset saat BUY) sebelum mencetak `OK`
+- [x] `umi-listing.test.ts`: assert **required signers** (numRequiredSignatures>0
+  + authority ada di daftar), bukan sekadar "unsigned" (yang trivially true)
+- [x] **Terverifikasi on-chain (devnet):** LIST → owner tetap seller +
+  TransferDelegate→delegate ✅; BUY → owner = buyer + delegate authority reset ✅;
+  `OK`
+- [x] Verifikasi penuh: typecheck 10/10, lint 10/10, test 6/6 tasks (application 17,
+  solana 42, database 3+4 skip, worker 6)
+- [x] Docs: ADR-0005 + bagian "Temuan signer" (4 temuan terverifikasi)
+
 ### 2026-10-14 — M3 #2: listing non-custodial (ADR-0005 rev) + API routes
 - [x] **Revisi ADR-0005**: Auction House & Fixed Price Sale **DEPRECATED**
   (diverifikasi live di developers.metaplex.com) dan tidak kompatibel Metaplex

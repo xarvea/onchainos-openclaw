@@ -1,6 +1,11 @@
 import type { ListingGateway } from '@micow/application';
 import { addPlugin, fetchAsset, revokePluginAuthority, transfer } from '@metaplex-foundation/mpl-core';
-import { publicKey, type TransactionBuilder, type Umi } from '@metaplex-foundation/umi';
+import {
+  createNoopSigner,
+  publicKey,
+  type TransactionBuilder,
+  type Umi,
+} from '@metaplex-foundation/umi';
 
 /**
  * Umi implementation of the ListingGateway port for the **non-custodial** model
@@ -14,8 +19,17 @@ import { publicKey, type TransactionBuilder, type Umi } from '@metaplex-foundati
  *                 revokes the delegate automatically after the transfer.
  *
  * Every method returns an **unsigned, base64-serialized** transaction. The
- * backend never signs for the user — the wallet signs client-side. The returned
- * tx is unsigned (its signature vector is empty), verified in the unit test.
+ * backend never signs for the user — the wallet signs client-side.
+ *
+ * ── Why `createNoopSigner` matters (learned via the devnet e2e probe) ─────────
+ * Core's `addPlugin`/`transfer` resolve their `authority` account from a Umi
+ * `Signer`; only a Signer is emitted with `isSigner = true`. Passing a bare
+ * `PublicKey` (or omitting the authority) yields a transaction that requires
+ * **nobody** to sign — which the client could never submit and which the unit
+ * tests could not catch (an empty tx is trivially "unsigned"). We therefore wrap
+ * each authority address in `createNoopSigner`: it never signs (the backend
+ * holds no user key) but it *marks the address as a required signer*, so the
+ * serialized tx carries the correct, non-empty signature slots for the wallet.
  */
 export class UmiListingGateway implements ListingGateway {
   constructor(
@@ -53,6 +67,9 @@ export class UmiListingGateway implements ListingGateway {
 
     const builder = addPlugin(this.umi, {
       asset: publicKey(input.asset),
+      // The seller owns the asset, so the seller is the authority that must sign
+      // the add-plugin instruction. Mark it required via a noop signer.
+      authority: createNoopSigner(publicKey(input.seller)),
       plugin: {
         type: 'TransferDelegate',
         authority: { type: 'Address', address: publicKey(delegate) },
@@ -70,6 +87,8 @@ export class UmiListingGateway implements ListingGateway {
   }): Promise<{ serializedTx: string }> {
     const builder = revokePluginAuthority(this.umi, {
       asset: publicKey(input.asset),
+      // Revoking is a plugin authority op; the asset's owner (seller) signs.
+      authority: createNoopSigner(publicKey(input.seller)),
       plugin: { type: 'TransferDelegate' },
     });
     return { serializedTx: await this.toUnsignedBase64(builder) };
@@ -90,8 +109,9 @@ export class UmiListingGateway implements ListingGateway {
     const builder = transfer(this.umi, {
       asset,
       newOwner: publicKey(input.buyer),
-      // The delegate holds the TransferDelegate authority and signs (client-side).
-      authority: this.umi.identity,
+      // The delegate holds the TransferDelegate authority and must sign the
+      // transfer. Mark it required (the buyer only pays; the delegate authorizes).
+      authority: createNoopSigner(publicKey(input.delegate)),
     });
 
     return { serializedTx: await this.toUnsignedBase64(builder) };
