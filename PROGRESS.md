@@ -133,11 +133,21 @@
   durable). +3 unit test.
 - [x] **Probe launch:e2e di-wire** ke factory: default server HTTP lokal (offline,
   tanpa secret), atau IPFS bila `ASSET_STORAGE_DRIVER=pinata` + `PINATA_JWT`.
+- [x] **Terverifikasi on-chain (devnet) + IPFS nyata**: `ASSET_STORAGE_DRIVER=pinata
+  pnpm --filter @micow/worker launch:e2e` → collection
+  `4QzMvFY9So3tQ83EFszePmdDoS3wwpV6FJMKpKQrRB4P`, CM
+  `DsCrMAQCrfgD7GFZd1UwjH5igg2vyiaDwQgVVykAPyES`, 3 signature; metadata on-chain
+  = `https://gateway.pinata.cloud/ipfs/QmfEmzbrQ5iKPfStCyobUWrnG4V24etpvDHU9LdzUjz7c2`
+  → **fetch HTTP 200**, isi JSON benar (nama + image yang juga ter-pin di IPFS)
+- [x] Fix `.env`: `NEXT_PUBLIC_TREASURY_WALLET` dikutip (sebelumnya nilai mentah
+  bikin `source .env` error)
+- [x] Pinata live-test: `pinFileToIPFS` + `pinJSONToIPFS` keduanya **HTTP 200**
+  (scope JWT benar). Test via key scoped baru (`micow-devnet`).
 - [x] Verifikasi penuh: typecheck 10/10, lint 10/10, test **88** (domain 12,
   application 17, solana 50, database 3+4 skip, worker 6).
-- [ ] **Belum**: isi `PINATA_JWT` di `.env` (buat di
-  https://app.pinata.cloud/developers/api-keys, scope pinFileToIPFS +
-  pinJSONToIPFS) → lalu `ASSET_STORAGE_DRIVER=pinata` siap dipakai.
+- [ ] **Catatan**: script probe belum auto-load `.env` (jalankan dgn
+  `set -a; . ./.env; set +a` atau `node --env-file`). Layak ditambah
+  `--env-file=.env` di script nanti.
 - [ ] **Belum**: composition root untuk web/worker runtime (bukan cuma probe) —
   saat route mint publik ditambahkan.
 
