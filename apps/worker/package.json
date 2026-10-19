@@ -19,7 +19,7 @@
     "@micow/domain": "workspace:*",
     "@micow/observability": "workspace:*",
     "@micow/solana": "workspace:*",
-    "inngest": "^3.29.0"
+    "inngest": "^4.24.0"
   },
   "devDependencies": {
     "@micow/config-eslint": "workspace:*",
