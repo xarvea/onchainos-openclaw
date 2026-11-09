@@ -20,10 +20,10 @@
   "devDependencies": {
     "@micow/config-ts": "workspace:*",
     "@types/react": "^19.0.2",
-    "react": "^19.0.0",
+    "react": "^19.3.1",
     "typescript": "^5.7.3"
   },
   "peerDependencies": {
-    "react": "^19.0.0"
+    "react": "^19.3.1"
   }
 }
