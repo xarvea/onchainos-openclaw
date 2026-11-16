@@ -24,8 +24,8 @@
     "@micow/config-eslint": "workspace:*",
     "@micow/config-ts": "workspace:*",
     "eslint": "^9.18.0",
-    "prettier": "^3.4.2",
-    "turbo": "^2.3.3",
+    "prettier": "^3.10.1",
+    "turbo": "^2.11.11",
     "typescript": "^5.7.3"
   }
 }
